@@ -68,12 +68,14 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
+        // Ensure count is passed as an object
         res.render('results', { count });
     } catch (err) {
         console.error('Error retrieving preferences:', err);
         res.status(500).send('Server Error');
     }
 });
+
 
 
 // Reduce count route
