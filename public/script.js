@@ -76,17 +76,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ id, type })
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json()) // Parse JSON response
+            .then(data => {
+                if (data.success) {
                     location.reload();
                 } else {
-                    console.error('Failed to reduce count:', response.status);
+                    console.error('Failed to reduce count:', data.error);
                 }
             })
             .catch(error => console.error('Error:', error));
         });
     });
 });
+
 
     });
 }
