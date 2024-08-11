@@ -102,14 +102,14 @@ app.post('/give-count', async (req, res) => {
 app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
+    // Check if id and type are provided
     if (!id || !type) {
-        return res.status(400).send('Invalid request'); // Handle invalid request
+        return res.status(400).send('Invalid request');
     }
 
     try {
         // Retrieve all preferences from Redis
         const preferences = await client.lRange('preferences', 0, -1);
-        
         let found = false;
 
         for (const pref of preferences) {
@@ -139,6 +139,7 @@ app.post('/reduce-count', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
 
 
 // Clear preferences route
