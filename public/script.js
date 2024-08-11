@@ -1,4 +1,4 @@
-document.getElementById('giveCountBtn').addEventListener('click', function(event) {
+document.getElementById('countForm').addEventListener('click', function(event) {
     event.preventDefault(); // Prevent the default form submission
 
     fetch('/give-count', {
