@@ -32,6 +32,7 @@ setInterval(() => {
     });
 }, 10000); // Ping every 10 seconds
 
+app.use(bodyParser.json()); // Add this line to handle JSON bodies
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
@@ -102,18 +103,20 @@ app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
     if (!id || !type) {
-        return res.status(400).send('Invalid request');
+        return res.status(400).send('Invalid request: Missing id or type');
     }
 
     try {
         const preferences = await client.lRange('preferences', 0, -1);
 
+        // Find the index of the preference to remove
         const indexToRemove = preferences.findIndex(pref => {
             const parsedPref = JSON.parse(pref);
             return parsedPref[type] === id;
         });
 
         if (indexToRemove > -1) {
+            // Remove the item
             await client.lRem('preferences', 1, preferences[indexToRemove]);
         }
 
@@ -123,6 +126,7 @@ app.post('/reduce-count', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
 // Clear preferences route
 app.post('/clear', async (req, res) => {
     try {
