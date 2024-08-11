@@ -7,37 +7,42 @@
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>Results</h1>
+    <h1>Preference Counts</h1>
+
+    <form action="/clear" method="POST">
+        <button type="submit">Clear Preferences</button>
+    </form>
+
     <div class="results-container">
-        <h2>Drink Preferences</h2>
-        <ul>
-            <% Object.keys(count.drinks).forEach(drink => { %>
-                <li>
-                    <%= drink %>: <%= count.drinks[drink] %>
-                    <form action="/reduce-count" method="POST" style="display:inline;">
-                        <input type="hidden" name="id" value="<%= drink %>">
-                        <input type="hidden" name="type" value="drink">
-                        <button type="submit">-</button>
-                    </form>
-                </li>
-            <% }) %>
-        </ul>
-        <h2>Snack Preferences</h2>
-        <ul>
-            <% Object.keys(count.snacks).forEach(snack => { %>
-                <li>
-                    <%= snack %>: <%= count.snacks[snack] %>
-                    <form action="/reduce-count" method="POST" style="display:inline;">
-                        <input type="hidden" name="id" value="<%= snack %>">
-                        <input type="hidden" name="type" value="snack">
-                        <button type="submit">-</button>
-                    </form>
-                </li>
-            <% }) %>
-        </ul>
-        <form action="/clear" method="POST">
-            <button type="submit">Clear Preferences</button>
-        </form>
+        <div class="section">
+            <h2>Drinks</h2>
+            <ul>
+                <% for (const [drink, count] of Object.entries(count.drinks)) { %>
+                    <li><%= drink %>: <%= count %>
+                        <form action="/reduce-count" method="POST" style="display: inline;">
+                            <input type="hidden" name="id" value="<%= drink %>">
+                            <input type="hidden" name="type" value="drink">
+                            <button type="submit">-</button>
+                        </form>
+                    </li>
+                <% } %>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Snacks</h2>
+            <ul>
+                <% for (const [snack, count] of Object.entries(count.snacks)) { %>
+                    <li><%= snack %>: <%= count %>
+                        <form action="/reduce-count" method="POST" style="display: inline;">
+                            <input type="hidden" name="id" value="<%= snack %>">
+                            <input type="hidden" name="type" value="snack">
+                            <button type="submit">-</button>
+                        </form>
+                    </li>
+                <% } %>
+            </ul>
+        </div>
     </div>
 </body>
 </html>
