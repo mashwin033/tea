@@ -109,14 +109,30 @@ app.post('/reduce-count', async (req, res) => {
             }
         }
 
-        res.redirect('/'); // Redirect to home page after reducing the count
+        // Return updated results as JSON
+        const updatedPreferences = await client.lRange('preferences', 0, -1);
+        const count = updatedPreferences.reduce((acc, pref) => {
+            const parsedPref = JSON.parse(pref);
+
+            if (parsedPref.drink) {
+                acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
+            }
+
+            if (parsedPref.snack) {
+                acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
+            }
+
+            return acc;
+        }, { drinks: {}, snacks: {} });
+
+        res.json(count);
     } catch (err) {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
     }
 });
 
-// Clear preferences route
+// Route to clear all preferences
 app.post('/clear', async (req, res) => {
     try {
         await client.del('preferences');
