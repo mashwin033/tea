@@ -2,26 +2,18 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const redis = require('redis');
 
+const app = express();
+const PORT = 3000;
+
 // Get Redis URL from environment variables
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-const client = redis.createClient({ url: redisUrl });
+const client = redis.createClient({ url: redis://red-cqs8lhrqf0us738u48a0:6379 });
 
 client.on('error', (err) => {
     console.error('Redis error:', err);
 });
 
-const app = express();
-const PORT = 3000;
-
-// Create Redis client
-const client = redis.createClient({
-    socket: {
-        host: '127.0.0.1',
-        port: 6379,
-        reconnectStrategy: (retries) => Math.min(retries * 50, 2000)
-    }
-});
 
 // Connect to Redis
 client.connect().catch(console.error);
