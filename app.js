@@ -43,7 +43,6 @@ app.get('/', (req, res) => {
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
 
-    // Store only non-empty values
     if (drink || snack) {
         const preference = {};
 
@@ -67,6 +66,7 @@ app.post('/submit', async (req, res) => {
     }
 });
 
+// Route to get the count of preferences
 app.post('/give-count', async (req, res) => {
     try {
         const preferences = await client.lRange('preferences', 0, -1);
@@ -85,35 +85,33 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        res.render('results', { count });
+        res.json(count); // Send results as JSON
     } catch (err) {
         console.error('Error retrieving preferences:', err);
         res.status(500).send('Server Error');
     }
 });
 
-// Results page route
-app.post('/give-count', async (req, res) => {
+// Route to reduce the count of a drink or snack
+app.post('/reduce-count', async (req, res) => {
+    const { type, item } = req.body;
+
     try {
         const preferences = await client.lRange('preferences', 0, -1);
 
-        const count = preferences.reduce((acc, pref) => {
-            const parsedPref = JSON.parse(pref);
+        // Find and remove the first occurrence of the item in the specified type (drink or snack)
+        for (let i = 0; i < preferences.length; i++) {
+            const pref = JSON.parse(preferences[i]);
 
-            if (parsedPref.drink) {
-                acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
+            if (pref[type] === item) {
+                await client.lRem('preferences', 1, preferences[i]);
+                break;
             }
+        }
 
-            if (parsedPref.snack) {
-                acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
-            }
-
-            return acc;
-        }, { drinks: {}, snacks: {} });
-
-        res.render('results', { count });
+        res.redirect('/'); // Redirect to home page after reducing the count
     } catch (err) {
-        console.error('Error retrieving preferences:', err);
+        console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
     }
 });
