@@ -86,12 +86,14 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        res.render('results', { count });
+        // Send the count data as JSON
+        res.json(count);
     } catch (err) {
         console.error('Error retrieving preferences:', err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error' });
     }
 });
+
 
 
 
