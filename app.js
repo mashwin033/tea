@@ -1,11 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const crypto = require('crypto');
 const redis = require('redis');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisUrl = process.env.REDIS_URL || 'redis://red-cqs8lhrqf0us738u48a0:6379';
 
 const client = redis.createClient({ url: redisUrl });
 
