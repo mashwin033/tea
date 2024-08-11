@@ -35,27 +35,35 @@ app.get('/', (req, res) => {
 // Submit preferences route
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
-    const id = generateUniqueId(); // Generate a unique identifier
 
-    if (drink || snack) {
-        const preference = JSON.stringify({ id, drink, snack });
+    if (drink) {
+        await client.rPush('drinks', drink);
+    }
 
-        try {
-            await client.rPush('preferences', preference);
-            res.redirect('/');
-        } catch (err) {
-            console.error('Error storing preference:', err);
-            res.status(500).send('Server Error');
-        }
-    } else {
+    if (snack) {
+        await client.rPush('snacks', snack);
+    }
+    
+    const preference = JSON.stringify({ drink, snack });
+
+    console.log('Submitting Preference:', preference); // Debugging
+
+    try {
+        await client.rPush('preferences', preference);
         res.redirect('/');
+    } catch (err) {
+        console.error('Error storing preference:', err);
+        res.status(500).send('Server Error');
     }
 });
+
 
 // Results page route
 app.post('/give-count', async (req, res) => {
     try {
         const preferences = await client.lRange('preferences', 0, -1);
+
+        console.log('Retrieved Preferences:', preferences); // Debugging
 
         const count = preferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
@@ -68,13 +76,15 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        // Ensure count is passed as an object
+        console.log('Count Object:', count); // Debugging
+
         res.render('results', { count });
     } catch (err) {
         console.error('Error retrieving preferences:', err);
         res.status(500).send('Server Error');
     }
 });
+
 
 
 
