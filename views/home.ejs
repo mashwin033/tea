@@ -60,6 +60,8 @@
         }
         .item button {
             background-color: #dc3545;
+            border: none;
+            cursor: pointer;
         }
         .item button:hover {
             background-color: #c82333;
@@ -121,8 +123,30 @@
             const response = await fetch('/give-count', { method: 'POST' });
             const data = await response.json();
 
+            updateResults(data);
+        });
+
+        document.addEventListener('click', async (e) => {
+            if (e.target && e.target.classList.contains('reduce-btn')) {
+                e.preventDefault();
+
+                const form = e.target.closest('form');
+                const formData = new FormData(form);
+
+                const response = await fetch('/reduce-count', {
+                    method: 'POST',
+                    body: new URLSearchParams(formData),
+                });
+
+                const data = await response.json();
+                updateResults(data);
+            }
+        });
+
+        async function updateResults(data) {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
+
             for (const [type, items] of Object.entries(data)) {
                 const typeTitle = document.createElement('h3');
                 typeTitle.textContent = type.charAt(0).toUpperCase() + type.slice(1);
@@ -132,15 +156,15 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'item';
                     itemDiv.innerHTML = `${item}: ${count} 
-                        <form class="reduceForm" action="/reduce-count" method="POST" style="display:inline;">
+                        <form class="reduce-form" action="/reduce-count" method="POST" style="display:inline;">
                             <input type="hidden" name="type" value="${type}">
                             <input type="hidden" name="item" value="${item}">
-                            <button type="submit">-</button>
+                            <button type="submit" class="reduce-btn">-</button>
                         </form>`;
                     resultsDiv.appendChild(itemDiv);
                 }
             }
-        });
+        }
     </script>
 </body>
 </html>
