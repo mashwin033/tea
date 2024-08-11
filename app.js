@@ -132,6 +132,7 @@ app.post('/reduce-count', async (req, res) => {
         console.error('Error reducing count:', err);
         res.status(500).json({ error: 'Server Error' });
     }
+    res.status(200).send('Count reduced successfully');
 });
 
 
