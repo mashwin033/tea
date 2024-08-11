@@ -60,38 +60,30 @@ document.getElementById('countForm').addEventListener('click', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const reduceButtons = document.querySelectorAll('.reduceBtn');
-
-    reduceButtons.forEach(button => {
-        button.addEventListener('click', function(event) {
+    document.querySelectorAll('.reduceBtn').forEach(button => {
+        button.addEventListener('click', async (event) => {
             event.preventDefault();
 
-            const id = this.getAttribute('data-id');
-            const type = this.getAttribute('data-type');
+            const id = button.getAttribute('data-id');
+            const type = button.getAttribute('data-type');
 
-            fetch('/reduce-count', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id, type })
-            })
-            .then(response => {
+            try {
+                const response = await fetch('/reduce-count', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id, type })
+                });
+
                 if (!response.ok) {
-                    return response.text().then(text => {
-                        throw new Error(text);
-                    });
+                    throw new Error('Network response was not ok.');
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    console.error('Failed to reduce count:', data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
+
+                window.location.reload(); // Refresh the page to show updated counts
+            } catch (error) {
+                console.error('Error reducing count:', error);
+            }
         });
     });
 });
