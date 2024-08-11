@@ -7,22 +7,37 @@
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Preferences Count</h1>
-        <h2>Drinks</h2>
+    <h1>Results</h1>
+    <div class="results-container">
+        <h2>Drink Preferences</h2>
         <ul>
-            <% for(let drink in count.drinks) { %>
-                <li><%= drink %>: <%= count.drinks[drink] %></li>
-            <% } %>
+            <% Object.keys(count.drinks).forEach(drink => { %>
+                <li>
+                    <%= drink %>: <%= count.drinks[drink] %>
+                    <form action="/reduce-count" method="POST" style="display:inline;">
+                        <input type="hidden" name="id" value="<%= drink %>">
+                        <input type="hidden" name="type" value="drink">
+                        <button type="submit">-</button>
+                    </form>
+                </li>
+            <% }) %>
         </ul>
-
-        <h2>Snacks</h2>
+        <h2>Snack Preferences</h2>
         <ul>
-            <% for(let snack in count.snacks) { %>
-                <li><%= snack %>: <%= count.snacks[snack] %></li>
-            <% } %>
+            <% Object.keys(count.snacks).forEach(snack => { %>
+                <li>
+                    <%= snack %>: <%= count.snacks[snack] %>
+                    <form action="/reduce-count" method="POST" style="display:inline;">
+                        <input type="hidden" name="id" value="<%= snack %>">
+                        <input type="hidden" name="type" value="snack">
+                        <button type="submit">-</button>
+                    </form>
+                </li>
+            <% }) %>
         </ul>
-        <a href="/">Go Back</a>
+        <form action="/clear" method="POST">
+            <button type="submit">Clear Preferences</button>
+        </form>
     </div>
 </body>
 </html>
