@@ -71,7 +71,7 @@ app.post('/submit', async (req, res) => {
 });
 
 // Results page route
-app.post('/give-count', async (req, res) => {
+app.post('/give-count-json', async (req, res) => {
     try {
         const preferences = await client.lRange('preferences', 0, -1);
 
@@ -86,12 +86,14 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        res.render('results', { count });
+        // Send JSON response instead of rendering a page
+        res.json(count);
     } catch (err) {
         console.error('Error retrieving preferences:', err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error' });
     }
 });
+
 
 
 // Reduce count route
