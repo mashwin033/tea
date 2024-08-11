@@ -102,11 +102,8 @@ app.post('/give-count', async (req, res) => {
 app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
-    console.log('Received ID:', id); // Debugging line
-    console.log('Received Type:', type); // Debugging line
-
     if (!id || !type) {
-        return res.status(400).send('Invalid request: Missing id or type');
+        return res.status(400).json({ error: 'Invalid request: Missing id or type' });
     }
 
     try {
@@ -123,10 +120,10 @@ app.post('/reduce-count', async (req, res) => {
             await client.lRem('preferences', 1, preferences[indexToRemove]);
         }
 
-        res.redirect('/');
+        res.status(200).json({ success: true });
     } catch (err) {
         console.error('Error reducing count:', err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error' });
     }
 });
 
