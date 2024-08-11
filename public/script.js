@@ -76,7 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ id, type })
             })
-            .then(response => response.json()) // Parse JSON response
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     location.reload();
@@ -88,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
 
 
     });
