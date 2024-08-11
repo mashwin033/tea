@@ -82,7 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Network response was not ok.');
+                    const errorText = await response.text(); // Read response text
+                    console.error('Error reducing count:', errorText);
+                    return;
                 }
 
                 window.location.reload(); // Refresh the page to show updated counts
@@ -92,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
 
 
 
