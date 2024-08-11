@@ -102,6 +102,9 @@ app.post('/give-count', async (req, res) => {
 app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
+    console.log('Received ID:', id); // Debugging line
+    console.log('Received Type:', type); // Debugging line
+
     if (!id || !type) {
         return res.status(400).send('Invalid request: Missing id or type');
     }
