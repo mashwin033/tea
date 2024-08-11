@@ -135,6 +135,7 @@ app.post('/reduce-count', async (req, res) => {
 });
 
 
+
 // Clear preferences route
 app.post('/clear', async (req, res) => {
     try {
