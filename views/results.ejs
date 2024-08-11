@@ -17,9 +17,9 @@
         <div class="section">
             <h2>Drinks</h2>
             <ul>
-                <% if (count.drinks) { %>
-                    <% for (const [drink, count] of Object.entries(count.drinks)) { %>
-                        <li><%= drink %>: <%= count %>
+                <% if (count && count.drinks) { %>
+                    <% for (const [drink, drinkCount] of Object.entries(count.drinks)) { %>
+                        <li><%= drink %>: <%= drinkCount %>
                             <form action="/reduce-count" method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="<%= drink %>">
                                 <input type="hidden" name="type" value="drink">
@@ -34,9 +34,9 @@
         <div class="section">
             <h2>Snacks</h2>
             <ul>
-                <% if (count.snacks) { %>
-                    <% for (const [snack, count] of Object.entries(count.snacks)) { %>
-                        <li><%= snack %>: <%= count %>
+                <% if (count && count.snacks) { %>
+                    <% for (const [snack, snackCount] of Object.entries(count.snacks)) { %>
+                        <li><%= snack %>: <%= snackCount %>
                             <form action="/reduce-count" method="POST" style="display: inline;">
                                 <input type="hidden" name="id" value="<%= snack %>">
                                 <input type="hidden" name="type" value="snack">
