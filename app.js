@@ -97,19 +97,24 @@ app.post('/reduce-count', async (req, res) => {
     const { type, item } = req.body;
 
     try {
+        // Get all preferences
         const preferences = await client.lRange('preferences', 0, -1);
 
-        for (let i = 0; i < preferences.length; i++) {
-            const pref = JSON.parse(preferences[i]);
+        // Filter out the item to be reduced
+        const updatedPreferences = preferences.filter(pref => {
+            const parsedPref = JSON.parse(pref);
+            return !(parsedPref[type] === item);
+        });
 
-            if (pref[type] === item) {
-                await client.lRem('preferences', 1, preferences[i]);
-                break;
-            }
-        }
+        // Clear the existing preferences
+        await client.del('preferences');
 
-        const updatedPreferences = await client.lRange('preferences', 0, -1);
-        const count = updatedPreferences.reduce((acc, pref) => {
+        // Re-add the updated preferences
+        await client.rPush('preferences', ...updatedPreferences);
+
+        // Get the updated count
+        const newPreferences = await client.lRange('preferences', 0, -1);
+        const count = newPreferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
 
             if (parsedPref.drink) {
@@ -129,6 +134,7 @@ app.post('/reduce-count', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
 
 // Route to clear all preferences
 app.post('/clear', async (req, res) => {
