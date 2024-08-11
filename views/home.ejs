@@ -7,52 +7,66 @@
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Enter Your Preferences</h1>
+    <h1>Enter Your Preferences</h1>
+    <form id="preferenceForm" action="/submit" method="POST">
+        <label for="drink">Favorite Drink:</label>
+        <select id="drink" name="drink">
+            <option value="">Select a drink</option>
+            <option value="tea">Tea</option>
+            <option value="coffee">Coffee</option>
+            <option value="black tea">Black Tea</option>
+            <option value="black coffee">Black Coffee</option>
+            <option value="mint tea">Mint Tea</option>
+            <option value="boost">Boost</option>
+            <option value="horlicks">Horlicks</option>
+        </select>
 
-        <form action="/submit" method="POST">
-            <label for="drink">Beverage:</label>
-            <select id="drink" name="drink">
-                <option value="" selected>Select your drink</option>
-                <option value="Tea">Tea</option>
-                <option value="Coffee">Coffee</option>
-                <option value="Black Tea">Black Tea</option>
-                <option value="Black Coffee">Black Coffee</option>
-                <option value="Mint Tea">Mint Tea</option>
-                <option value="Boost">Boost</option>
-                <option value="Horlicks">Horlicks</option>
-            </select>
+        <label for="snack">Favorite Snack:</label>
+        <select id="snack" name="snack">
+            <option value="">Select a snack</option>
+            <option value="puffs">Puffs</option>
+            <option value="ela ada">Ela Ada</option>
+            <option value="ullivada">Ullivada</option>
+            <option value="cutlet">Cutlet</option>
+            <option value="pazhampori">Pazhampori</option>
+        </select>
 
-            <label for="snack">Snack:</label>
-            <select id="snack" name="snack">
-                <option value="" selected>Select your snack</option>
-                <option value="Puffs">Puffs</option>
-                <option value="Ela Ada">Ela Ada</option>
-                <option value="Ullivada">Ullivada</option>
-                <option value="Cutlet">Cutlet</option>
-                <option value="Pazhampori">Pazhampori</option>
-            </select>
+        <button type="submit">Submit</button>
+    </form>
 
-            <button type="submit">Submit</button>
-        </form>
+    <h2>Results</h2>
+    <form id="countForm" action="/give-count" method="POST">
+        <button type="submit">Give the Count</button>
+    </form>
 
-        <form action="/give-count" method="POST">
-            <button type="submit">Give the Count</button>
-        </form>
-
-        <form action="/clear" method="POST">
-            <button type="submit" onclick="clearPreferences()">Clear Preferences</button>
-        </form>
-
-        
-
+    <div id="results">
+        <!-- Results will be loaded here -->
     </div>
+
     <script>
-        function clearPreferences() {
-            // Reset the dropdowns to their default value
-            document.getElementById('drink').selectedIndex = 0;
-            document.getElementById('snack').selectedIndex = 0;
-        }
+        document.getElementById('countForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const response = await fetch('/give-count', { method: 'POST' });
+            const data = await response.json();
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            for (const [type, items] of Object.entries(data)) {
+                const typeTitle = document.createElement('h3');
+                typeTitle.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                resultsDiv.appendChild(typeTitle);
+
+                for (const [item, count] of Object.entries(items)) {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.innerHTML = `${item}: ${count} <form class="reduceForm" action="/reduce-count" method="POST" style="display:inline;">
+                        <input type="hidden" name="type" value="${type}">
+                        <input type="hidden" name="item" value="${item}">
+                        <button type="submit">-</button>
+                    </form>`;
+                    resultsDiv.appendChild(itemDiv);
+                }
+            }
+        });
     </script>
 </body>
 </html>
