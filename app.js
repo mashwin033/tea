@@ -1,40 +1,31 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 const redis = require('redis');
-const { v4: uuidv4 } = require('uuid'); // Import uuid to generate unique identifiers
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-const redisUrl = 'redis://red-cqs8lhrqf0us738u48a0:6379';
 const client = redis.createClient({ url: redisUrl });
 
 client.on('error', (err) => {
     console.error('Redis error:', err);
 });
 
-client.connect().catch(console.error);
-
-client.on('error', (err) => {
-    console.error('Redis error:', err);
+client.connect().catch(err => {
+    console.error('Failed to connect to Redis:', err);
+    process.exit(1);
 });
-
-client.on('end', () => {
-    console.error('Redis connection closed. Reconnecting...');
-    client.connect().catch(console.error);
-});
-
-setInterval(() => {
-    client.ping().then(result => {
-        console.log('Redis ping response:', result);
-    }).catch(err => {
-        console.error('Redis ping error:', err);
-    });
-}, 10000);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
+
+// Generate a unique identifier using crypto
+function generateUniqueId() {
+    return crypto.randomBytes(16).toString('hex');
+}
 
 // Home page route
 app.get('/', (req, res) => {
@@ -44,7 +35,7 @@ app.get('/', (req, res) => {
 // Submit preferences route
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
-    const id = uuidv4(); // Generate a unique identifier for each preference
+    const id = generateUniqueId(); // Generate a unique identifier
 
     if (drink || snack) {
         const preference = JSON.stringify({ id, drink, snack });
@@ -86,7 +77,7 @@ app.post('/give-count', async (req, res) => {
 
 // Reduce count route
 app.post('/reduce-count', async (req, res) => {
-    const { id } = req.body;
+    const { id, type } = req.body;
 
     try {
         const preferences = await client.lRange('preferences', 0, -1);
@@ -103,7 +94,6 @@ app.post('/reduce-count', async (req, res) => {
             await client.rPush('preferences', ...updatedPreferences);
         }
 
-        // Recalculate counts
         const count = updatedPreferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
             if (parsedPref.drink) {
@@ -115,7 +105,7 @@ app.post('/reduce-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        res.json(count);
+        res.render('results', { count });
     } catch (err) {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
