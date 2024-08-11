@@ -17,14 +17,16 @@
         <div class="section">
             <h2>Drinks</h2>
             <ul>
-                <% for (const [drink, count] of Object.entries(count.drinks)) { %>
-                    <li><%= drink %>: <%= count %>
-                        <form action="/reduce-count" method="POST" style="display: inline;">
-                            <input type="hidden" name="id" value="<%= drink %>">
-                            <input type="hidden" name="type" value="drink">
-                            <button type="submit">-</button>
-                        </form>
-                    </li>
+                <% if (count.drinks) { %>
+                    <% for (const [drink, count] of Object.entries(count.drinks)) { %>
+                        <li><%= drink %>: <%= count %>
+                            <form action="/reduce-count" method="POST" style="display: inline;">
+                                <input type="hidden" name="id" value="<%= drink %>">
+                                <input type="hidden" name="type" value="drink">
+                                <button type="submit">-</button>
+                            </form>
+                        </li>
+                    <% } %>
                 <% } %>
             </ul>
         </div>
@@ -32,14 +34,16 @@
         <div class="section">
             <h2>Snacks</h2>
             <ul>
-                <% for (const [snack, count] of Object.entries(count.snacks)) { %>
-                    <li><%= snack %>: <%= count %>
-                        <form action="/reduce-count" method="POST" style="display: inline;">
-                            <input type="hidden" name="id" value="<%= snack %>">
-                            <input type="hidden" name="type" value="snack">
-                            <button type="submit">-</button>
-                        </form>
-                    </li>
+                <% if (count.snacks) { %>
+                    <% for (const [snack, count] of Object.entries(count.snacks)) { %>
+                        <li><%= snack %>: <%= count %>
+                            <form action="/reduce-count" method="POST" style="display: inline;">
+                                <input type="hidden" name="id" value="<%= snack %>">
+                                <input type="hidden" name="type" value="snack">
+                                <button type="submit">-</button>
+                            </form>
+                        </li>
+                    <% } %>
                 <% } %>
             </ul>
         </div>
