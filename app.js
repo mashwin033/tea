@@ -94,27 +94,29 @@ app.post('/give-count', async (req, res) => {
 
 // Route to reduce the count of a drink or snack
 app.post('/reduce-count', async (req, res) => {
-    const { type, item } = req.body;
+    const { type, item } = req.body; // type could be 'drink' or 'snack', item is the specific value
 
     try {
-        // Get all preferences
+        // Retrieve all preferences from Redis
         const preferences = await client.lRange('preferences', 0, -1);
 
         // Filter out the item to be reduced
         const updatedPreferences = preferences.filter(pref => {
             const parsedPref = JSON.parse(pref);
+            // Only keep preferences that don't match the item to be reduced
             return !(parsedPref[type] === item);
         });
 
-        // Clear the existing preferences
+        // Clear the existing preferences from Redis
         await client.del('preferences');
 
-        // Re-add the updated preferences
-        await client.rPush('preferences', ...updatedPreferences);
+        // Re-add the updated preferences to Redis
+        if (updatedPreferences.length > 0) {
+            await client.rPush('preferences', ...updatedPreferences);
+        }
 
-        // Get the updated count
-        const newPreferences = await client.lRange('preferences', 0, -1);
-        const count = newPreferences.reduce((acc, pref) => {
+        // Calculate the updated counts
+        const count = updatedPreferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
 
             if (parsedPref.drink) {
@@ -128,12 +130,14 @@ app.post('/reduce-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
+        // Respond with the updated counts
         res.json(count);
     } catch (err) {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
     }
 });
+
 
 
 // Route to clear all preferences
