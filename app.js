@@ -100,7 +100,7 @@ app.post('/reduce-count', async (req, res) => {
         // Retrieve all preferences from Redis
         const preferences = await client.lRange('preferences', 0, -1);
 
-        // If there are no preferences, return an empty count
+        // Check if preferences are empty
         if (preferences.length === 0) {
             return res.json({ drinks: {}, snacks: {} });
         }
@@ -141,10 +141,6 @@ app.post('/reduce-count', async (req, res) => {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
     }
-
-console.log('Preferences before reduction:', preferences);
-console.log('Filtering out item:', { type, item });
-console.log('Updated preferences:', updatedPreferences);
 });
 
 
