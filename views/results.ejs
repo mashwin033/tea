@@ -19,7 +19,11 @@
         <% for (const [drink, count] of Object.entries(count.drinks)) { %>
             <li>
                 <%= drink %>: <%= count %>
-                <button class="reduceBtn" data-id="<%= drink %>" data-type="drinks">-</button>
+                <form class="reduce-form" action="/reduce-count" method="POST" style="display: inline;">
+                    <input type="hidden" name="id" value="<%= drink %>">
+                    <input type="hidden" name="type" value="drinks">
+                    <button type="submit" class="reduceBtn" data-id="<%= drink %>" data-type="drinks">-</button>
+                </form>
             </li>
         <% } %>
     </ul>
@@ -29,10 +33,15 @@
         <% for (const [snack, count] of Object.entries(count.snacks)) { %>
             <li>
                 <%= snack %>: <%= count %>
-                <button class="reduceBtn" data-id="<%= snack %>" data-type="snacks">-</button>
+                <form class="reduce-form" action="/reduce-count" method="POST" style="display: inline;">
+                    <input type="hidden" name="id" value="<%= snack %>">
+                    <input type="hidden" name="type" value="snacks">
+                    <button type="submit" class="reduceBtn" data-id="<%= snack %>" data-type="snacks">-</button>
+                </form>
             </li>
         <% } %>
     </ul>
+
 
     <script src="/script.js"></script>
 </body>
