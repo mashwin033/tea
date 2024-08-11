@@ -4,8 +4,10 @@ const redis = require('redis');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const redisUrl = process.env.REDIS_URL || 'redis://red-cqs8lhrqf0us738u48a0:6379';
+const PORT = 3000;
+
+// Get Redis URL from environment variables
+const redisUrl = 'redis://red-cqs8lhrqf0us738u48a0:6379';
 
 const client = redis.createClient({ url: redisUrl });
 
@@ -13,19 +15,29 @@ client.on('error', (err) => {
     console.error('Redis error:', err);
 });
 
-client.connect().catch(err => {
-    console.error('Failed to connect to Redis:', err);
-    process.exit(1);
+// Connect to Redis
+client.connect().catch(console.error);
+
+client.on('end', () => {
+    console.error('Redis connection closed. Reconnecting...');
+    client.connect().catch(console.error);
 });
+
+// Keep the connection alive
+setInterval(() => {
+    client.ping().then(result => {
+        console.log('Redis ping response:', result);
+    }).catch(err => {
+        console.error('Redis ping error:', err);
+    });
+}, 10000); // Ping every 10 seconds
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-// Generate a unique identifier using crypto
-function generateUniqueId() {
-    return crypto.randomBytes(16).toString('hex');
-}
+// Function to generate a unique ID using crypto
+const generateUniqueId = () => crypto.randomBytes(16).toString('hex');
 
 // Home page route
 app.get('/', (req, res) => {
@@ -36,19 +48,20 @@ app.get('/', (req, res) => {
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
 
-    if (drink) {
-        await client.rPush('drinks', drink);
-    }
-
-    if (snack) {
-        await client.rPush('snacks', snack);
-    }
-    
-    const preference = JSON.stringify({ drink, snack });
-
-    console.log('Submitting Preference:', preference); // Debugging
-
     try {
+        if (drink) {
+            await client.rPush('drinks', drink);
+        }
+
+        if (snack) {
+            await client.rPush('snacks', snack);
+        }
+
+        const preferenceId = generateUniqueId();
+        const preference = JSON.stringify({ id: preferenceId, drink, snack });
+
+        console.log('Submitting Preference:', preference);
+
         await client.rPush('preferences', preference);
         res.redirect('/');
     } catch (err) {
@@ -57,13 +70,12 @@ app.post('/submit', async (req, res) => {
     }
 });
 
-
 // Results page route
 app.post('/give-count', async (req, res) => {
     try {
         const preferences = await client.lRange('preferences', 0, -1);
 
-        console.log('Retrieved Preferences:', preferences); // Debugging
+        console.log('Retrieved Preferences:', preferences);
 
         const count = preferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
@@ -76,7 +88,7 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        console.log('Count Object:', count); // Debugging
+        console.log('Count Object:', count);
 
         res.render('results', { count });
     } catch (err) {
@@ -85,40 +97,54 @@ app.post('/give-count', async (req, res) => {
     }
 });
 
-
-
-
 // Reduce count route
 app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
+    if (!id || !type) {
+        return res.status(400).send('Invalid request');
+    }
+
     try {
-        const preferences = await client.lRange('preferences', 0, -1);
-
-        // Filter out the item with the specified ID
-        const updatedPreferences = preferences.filter(pref => {
-            const parsedPref = JSON.parse(pref);
-            return parsedPref.id !== id;
-        });
-
-        await client.del('preferences');
-
-        if (updatedPreferences.length > 0) {
-            await client.rPush('preferences', ...updatedPreferences);
+        let listKey;
+        if (type === 'drink') {
+            listKey = 'drinks';
+        } else if (type === 'snack') {
+            listKey = 'snacks';
+        } else {
+            return res.status(400).send('Invalid type');
         }
 
-        const count = updatedPreferences.reduce((acc, pref) => {
-            const parsedPref = JSON.parse(pref);
-            if (parsedPref.drink) {
-                acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
-            }
-            if (parsedPref.snack) {
-                acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
-            }
-            return acc;
-        }, { drinks: {}, snacks: {} });
+        // Fetch preferences and find the matching entry
+        const preferences = await client.lRange('preferences', 0, -1);
+        const updatedPreferences = [];
 
-        res.render('results', { count });
+        let found = false;
+        for (const pref of preferences) {
+            const parsedPref = JSON.parse(pref);
+            if (parsedPref[type] === id) {
+                found = true;
+                // Reduce count only if more than one
+                if (preferences.length > 1) {
+                    updatedPreferences.push(JSON.stringify({
+                        ...parsedPref,
+                        [type]: parsedPref[type] !== id ? parsedPref[type] : undefined
+                    }));
+                }
+            } else {
+                updatedPreferences.push(pref);
+            }
+        }
+
+        if (found) {
+            await client.del('preferences');
+            for (const pref of updatedPreferences) {
+                await client.rPush('preferences', pref);
+            }
+            res.redirect('/');
+        } else {
+            res.status(404).send('Item not found');
+        }
     } catch (err) {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
