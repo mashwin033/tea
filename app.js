@@ -100,10 +100,15 @@ app.post('/reduce-count', async (req, res) => {
         // Retrieve all preferences from Redis
         const preferences = await client.lRange('preferences', 0, -1);
 
+        // If there are no preferences, return an empty count
+        if (preferences.length === 0) {
+            return res.json({ drinks: {}, snacks: {} });
+        }
+
         // Filter out the item to be reduced
         const updatedPreferences = preferences.filter(pref => {
             const parsedPref = JSON.parse(pref);
-            // Only keep preferences that don't match the item to be reduced
+            // Remove the item if it matches the type and value
             return !(parsedPref[type] === item);
         });
 
@@ -136,7 +141,12 @@ app.post('/reduce-count', async (req, res) => {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
     }
+
+console.log('Preferences before reduction:', preferences);
+console.log('Filtering out item:', { type, item });
+console.log('Updated preferences:', updatedPreferences);
 });
+
 
 
 
