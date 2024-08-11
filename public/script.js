@@ -80,13 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     location.reload();
                 } else {
-                    console.error('Failed to reduce count');
+                    console.error('Failed to reduce count:', response.status);
                 }
             })
             .catch(error => console.error('Error:', error));
         });
     });
 });
+
     });
 }
 
