@@ -74,6 +74,7 @@ app.post('/submit', async (req, res) => {
 app.post('/give-count', async (req, res) => {
     try {
         const preferences = await client.lRange('preferences', 0, -1);
+
         const count = preferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
             if (parsedPref.drink) {
@@ -85,12 +86,13 @@ app.post('/give-count', async (req, res) => {
             return acc;
         }, { drinks: {}, snacks: {} });
 
-        res.json({ success: true, count });
+        res.render('results', { count });
     } catch (err) {
         console.error('Error retrieving preferences:', err);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).send('Server Error');
     }
 });
+
 
 // Reduce count route
 app.post('/reduce-count', async (req, res) => {
