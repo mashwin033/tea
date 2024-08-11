@@ -14,13 +14,8 @@ client.on('error', (err) => {
     console.error('Redis error:', err);
 });
 
-
 // Connect to Redis
 client.connect().catch(console.error);
-
-client.on('error', (err) => {
-    console.error('Redis error:', err);
-});
 
 client.on('end', () => {
     console.error('Redis connection closed. Reconnecting...');
@@ -48,27 +43,29 @@ app.get('/', (req, res) => {
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
 
-    if (drink) {
-        await client.rPush('drinks', drink);
-    }
+    // Store only non-empty values
+    if (drink || snack) {
+        const preference = {};
 
-    if (snack) {
-        await client.rPush('snacks', snack);
-    }
-    
-    const preference = JSON.stringify({ drink, snack });
+        if (drink) {
+            preference.drink = drink;
+        }
 
-    console.log('Submitting Preference:', preference); // Add this line for debugging
+        if (snack) {
+            preference.snack = snack;
+        }
 
-    try {
-        await client.rPush('preferences', preference);
-        res.redirect('/');
-    } catch (err) {
-        console.error('Error storing preference:', err);
-        res.status(500).send('Server Error');
+        try {
+            await client.rPush('preferences', JSON.stringify(preference));
+            res.redirect('/');
+        } catch (err) {
+            console.error('Error storing preference:', err);
+            res.status(500).send('Server Error');
+        }
+    } else {
+        res.redirect('/'); // If both drink and snack are empty, redirect without storing anything
     }
 });
-
 
 // Results page route
 app.post('/give-count', async (req, res) => {
@@ -77,8 +74,15 @@ app.post('/give-count', async (req, res) => {
 
         const count = preferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
-            acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
-            acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
+
+            if (parsedPref.drink) {
+                acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
+            }
+
+            if (parsedPref.snack) {
+                acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
+            }
+
             return acc;
         }, { drinks: {}, snacks: {} });
 
