@@ -47,6 +47,15 @@ app.get('/', (req, res) => {
 
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
+
+    if (drink) {
+        await client.rPush('drinks', drink);
+    }
+
+    if (snack) {
+        await client.rPush('snacks', snack);
+    }
+    
     const preference = JSON.stringify({ drink, snack });
 
     console.log('Submitting Preference:', preference); // Add this line for debugging
