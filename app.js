@@ -6,9 +6,9 @@ const app = express();
 const PORT = 3000;
 
 // Get Redis URL from environment variables
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisUrl = 'redis://red-cqs8lhrqf0us738u48a0:6379';
 
-const client = redis.createClient({ url: redis://red-cqs8lhrqf0us738u48a0:6379 });
+const client = redis.createClient({ url: redisUrl });
 
 client.on('error', (err) => {
     console.error('Redis error:', err);
