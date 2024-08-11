@@ -59,34 +59,34 @@ document.getElementById('countForm').addEventListener('click', function(event) {
     .catch(error => console.error('Error:', error));
 });
 
-function attachReduceButtonListeners() {
+document.addEventListener('DOMContentLoaded', () => {
     const reduceButtons = document.querySelectorAll('.reduceBtn');
+
     reduceButtons.forEach(button => {
         button.addEventListener('click', function(event) {
             event.preventDefault();
 
-            const form = event.target.closest('form');
-            const formData = new FormData(form);
+            const id = this.getAttribute('data-id');
+            const type = this.getAttribute('data-type');
 
             fetch('/reduce-count', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, type })
             })
-            .then(response => response.json())
-            .then(data => {
-                // Update the count display after reducing the count
-                const item = formData.get('item');
-                const type = formData.get('type');
-                const count = data[type][item];
-
-                if (count === undefined) {
-                    form.closest('li').remove(); // Remove the list item if count is 0
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
                 } else {
-                    form.closest('li').firstChild.textContent = `${item}: ${count}`;
+                    console.error('Failed to reduce count');
                 }
             })
             .catch(error => console.error('Error:', error));
         });
+    });
+});
     });
 }
 
