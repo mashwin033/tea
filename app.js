@@ -2,6 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const redis = require('redis');
 
+// Get Redis URL from environment variables
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
+const client = redis.createClient({ url: redisUrl });
+
+client.on('error', (err) => {
+    console.error('Redis error:', err);
+});
+
 const app = express();
 const PORT = 3000;
 
