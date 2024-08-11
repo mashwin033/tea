@@ -102,44 +102,37 @@ app.post('/give-count', async (req, res) => {
 app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
-    // Check if id and type are provided
     if (!id || !type) {
-        return res.status(400).send('Invalid request');
+        return res.status(400).json({ error: 'Invalid request' }); // Return JSON error message
     }
 
     try {
-        // Retrieve all preferences from Redis
         const preferences = await client.lRange('preferences', 0, -1);
-        let found = false;
+        let updated = false;
 
-        for (const pref of preferences) {
-            const parsedPref = JSON.parse(pref);
+        for (let i = 0; i < preferences.length; i++) {
+            let pref = JSON.parse(preferences[i]);
 
-            if (parsedPref[type] === id) {
-                if (parsedPref.count > 1) {
-                    parsedPref.count -= 1; // Reduce count
-                    found = true;
-                } else {
-                    // Remove the item if count is 1
-                    await client.lRem('preferences', 0, pref);
-                    found = true;
-                }
-                await client.rPush('preferences', JSON.stringify(parsedPref));
+            if (pref[type] === id) {
+                // Remove the item if count is 1
+                preferences.splice(i, 1);
+                updated = true;
                 break;
             }
         }
 
-        if (!found) {
-            return res.status(404).send('Item not found');
+        if (updated) {
+            await client.del('preferences');
+            await client.rPush('preferences', ...preferences.map(p => JSON.stringify(p)));
+            return res.json({ success: true });
+        } else {
+            return res.status(404).json({ error: 'Item not found' });
         }
-
-        res.redirect('/'); // Redirect back to the home page or results page
     } catch (err) {
         console.error('Error reducing count:', err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Server Error' });
     }
 });
-
 
 
 // Clear preferences route
