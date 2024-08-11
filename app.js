@@ -103,29 +103,43 @@ app.post('/reduce-count', async (req, res) => {
     const { id, type } = req.body;
 
     if (!id || !type) {
-        return res.status(400).json({ error: 'Invalid request: Missing id or type' });
+        return res.status(400).send('Invalid request'); // Handle invalid request
     }
 
     try {
+        // Retrieve all preferences from Redis
         const preferences = await client.lRange('preferences', 0, -1);
+        
+        let found = false;
 
-        // Find the index of the preference to remove
-        const indexToRemove = preferences.findIndex(pref => {
+        for (const pref of preferences) {
             const parsedPref = JSON.parse(pref);
-            return parsedPref[type] === id;
-        });
 
-        if (indexToRemove > -1) {
-            // Remove the item
-            await client.lRem('preferences', 1, preferences[indexToRemove]);
+            if (parsedPref[type] === id) {
+                if (parsedPref.count > 1) {
+                    parsedPref.count -= 1; // Reduce count
+                    found = true;
+                } else {
+                    // Remove the item if count is 1
+                    await client.lRem('preferences', 0, pref);
+                    found = true;
+                }
+                await client.rPush('preferences', JSON.stringify(parsedPref));
+                break;
+            }
         }
 
-        res.status(200).json({ success: true });
+        if (!found) {
+            return res.status(404).send('Item not found');
+        }
+
+        res.redirect('/'); // Redirect back to the home page or results page
     } catch (err) {
         console.error('Error reducing count:', err);
-        res.status(500).json({ error: 'Server Error' });
+        res.status(500).send('Server Error');
     }
 });
+
 
 // Clear preferences route
 app.post('/clear', async (req, res) => {
