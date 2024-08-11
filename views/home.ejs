@@ -13,6 +13,7 @@
         <form action="/submit" method="POST">
             <label for="drink">Favorite Drink:</label>
             <select id="drink" name="drink" required>
+                <option value="" disabled selected>Select your drink</option>
                 <option value="Tea">Tea</option>
                 <option value="Coffee">Coffee</option>
                 <option value="Black Tea">Black Tea</option>
@@ -23,7 +24,8 @@
             </select>
 
             <label for="snack">Favorite Snack:</label>
-            <select id="snack" name="snack" required>
+            <select id="snack" name="snack">
+                <option value="" disabled selected>Select your snack</option>
                 <option value="Puffs">Puffs</option>
                 <option value="Ela Ada">Ela Ada</option>
                 <option value="Ullivada">Ullivada</option>
@@ -39,8 +41,15 @@
         </form>
 
         <form action="/clear" method="POST">
-            <button type="submit">Clear Preferences</button>
+            <button type="submit" onclick="clearPreferences()">Clear Preferences</button>
         </form>
     </div>
+    <script>
+        function clearPreferences() {
+            // Reset the dropdowns to their default value
+            document.getElementById('drink').selectedIndex = 0;
+            document.getElementById('snack').selectedIndex = 0;
+        }
+    </script>
 </body>
 </html>
