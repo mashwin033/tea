@@ -67,6 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = button.getAttribute('data-id');
             const type = button.getAttribute('data-type');
 
+            if (!id || !type) {
+                console.error('Missing id or type in request');
+                return;
+            }
+
             try {
                 const response = await fetch('/reduce-count', {
                     method: 'POST',
@@ -87,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
 
 
 
