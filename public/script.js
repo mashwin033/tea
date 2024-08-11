@@ -81,19 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ id, type })
                 });
 
-                if (!response.ok) {
+                if (response.ok) {
+                    window.location.reload(); // Refresh the page to show updated counts
+                } else {
                     const errorText = await response.text(); // Read response text
                     console.error('Error reducing count:', errorText);
-                    return;
+                    alert('Error: ' + errorText); // Display error message to the user
                 }
-
-                window.location.reload(); // Refresh the page to show updated counts
             } catch (error) {
                 console.error('Error reducing count:', error);
             }
         });
     });
 });
+
 
 
 
