@@ -1,52 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <h1>Preference Counts</h1>
+<ul>
+    <% if (count.drinks) { %>
+        <% for (const [drinkName, drinkCount] of Object.entries(count.drinks)) { %>
+            <li><%= drinkName %>: <%= drinkCount %>
+                <form action="/reduce-count" method="POST" style="display: inline;">
+                    <input type="hidden" name="item" value="<%= drinkName %>">
+                    <button type="submit">-</button>
+                </form>
+            </li>
+        <% } %>
+    <% } %>
+</ul>
 
-    <form action="/clear" method="POST">
-        <button type="submit">Clear Preferences</button>
-    </form>
-
-    <div class="results-container">
-        <div class="section">
-            <h2>Drinks</h2>
-            <ul>
-                <% if (count && count.drinks) { %>
-                    <% for (const [drink, drinkCount] of Object.entries(count.drinks)) { %>
-                        <li><%= drink %>: <%= drinkCount %>
-                            <form action="/reduce-count" method="POST" style="display: inline;">
-                                <input type="hidden" name="id" value="<%= drink %>">
-                                <input type="hidden" name="type" value="drink">
-                                <button type="submit">-</button>
-                            </form>
-                        </li>
-                    <% } %>
-                <% } %>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2>Snacks</h2>
-            <ul>
-                <% if (count && count.snacks) { %>
-                    <% for (const [snack, snackCount] of Object.entries(count.snacks)) { %>
-                        <li><%= snack %>: <%= snackCount %>
-                            <form action="/reduce-count" method="POST" style="display: inline;">
-                                <input type="hidden" name="id" value="<%= snack %>">
-                                <input type="hidden" name="type" value="snack">
-                                <button type="submit">-</button>
-                            </form>
-                        </li>
-                    <% } %>
-                <% } %>
-            </ul>
-        </div>
-    </div>
-</body>
-</html>
+<ul>
+    <% if (count.snacks) { %>
+        <% for (const [snackName, snackCount] of Object.entries(count.snacks)) { %>
+            <li><%= snackName %>: <%= snackCount %>
+                <form action="/reduce-count" method="POST" style="display: inline;">
+                    <input type="hidden" name="item" value="<%= snackName %>">
+                    <button type="submit">-</button>
+                </form>
+            </li>
+        <% } %>
+    <% } %>
+</ul>
