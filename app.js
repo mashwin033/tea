@@ -106,51 +106,23 @@ app.post('/reduce-count', async (req, res) => {
     }
 
     try {
-        let listKey;
-        if (type === 'drink') {
-            listKey = 'drinks';
-        } else if (type === 'snack') {
-            listKey = 'snacks';
-        } else {
-            return res.status(400).send('Invalid type');
-        }
-
-        // Fetch preferences and find the matching entry
         const preferences = await client.lRange('preferences', 0, -1);
-        const updatedPreferences = [];
 
-        let found = false;
-        for (const pref of preferences) {
+        const indexToRemove = preferences.findIndex(pref => {
             const parsedPref = JSON.parse(pref);
-            if (parsedPref[type] === id) {
-                found = true;
-                // Reduce count only if more than one
-                if (preferences.length > 1) {
-                    updatedPreferences.push(JSON.stringify({
-                        ...parsedPref,
-                        [type]: parsedPref[type] !== id ? parsedPref[type] : undefined
-                    }));
-                }
-            } else {
-                updatedPreferences.push(pref);
-            }
+            return parsedPref[type] === id;
+        });
+
+        if (indexToRemove > -1) {
+            await client.lRem('preferences', 1, preferences[indexToRemove]);
         }
 
-        if (found) {
-            await client.del('preferences');
-            for (const pref of updatedPreferences) {
-                await client.rPush('preferences', pref);
-            }
-            res.redirect('/');
-        } else {
-            res.status(404).send('Item not found');
-        }
+        res.redirect('/');
     } catch (err) {
         console.error('Error reducing count:', err);
         res.status(500).send('Server Error');
     }
 });
-
 // Clear preferences route
 app.post('/clear', async (req, res) => {
     try {
