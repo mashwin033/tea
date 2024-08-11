@@ -67,6 +67,31 @@ app.post('/submit', async (req, res) => {
     }
 });
 
+app.post('/give-count', async (req, res) => {
+    try {
+        const preferences = await client.lRange('preferences', 0, -1);
+
+        const count = preferences.reduce((acc, pref) => {
+            const parsedPref = JSON.parse(pref);
+
+            if (parsedPref.drink) {
+                acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
+            }
+
+            if (parsedPref.snack) {
+                acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
+            }
+
+            return acc;
+        }, { drinks: {}, snacks: {} });
+
+        res.render('results', { count });
+    } catch (err) {
+        console.error('Error retrieving preferences:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Results page route
 app.post('/give-count', async (req, res) => {
     try {
