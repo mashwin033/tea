@@ -1,25 +1,27 @@
-<ul>
-    <% if (count.drinks) { %>
-        <% for (const [drinkName, drinkCount] of Object.entries(count.drinks)) { %>
-            <li><%= drinkName %>: <%= drinkCount %>
-                <form action="/reduce-count" method="POST" style="display: inline;">
-                    <input type="hidden" name="item" value="<%= drinkName %>">
-                    <button type="submit">-</button>
-                </form>
-            </li>
-        <% } %>
-    <% } %>
-</ul>
+<% if (count) { %>
+    <div class="results">
+        <h2>Drinks</h2>
+        <ul>
+            <% if (count.drinks) { %>
+                <% for (const [drink, drinkCount] of Object.entries(count.drinks)) { %>
+                    <li>
+                        <%= drink %>: <%= drinkCount %>
+                        <button class="reduceBtn" data-id="<%= drink %>" data-type="drink">-</button>
+                    </li>
+                <% } %>
+            <% } %>
+        </ul>
 
-<ul>
-    <% if (count.snacks) { %>
-        <% for (const [snackName, snackCount] of Object.entries(count.snacks)) { %>
-            <li><%= snackName %>: <%= snackCount %>
-                <form action="/reduce-count" method="POST" style="display: inline;">
-                    <input type="hidden" name="item" value="<%= snackName %>">
-                    <button type="submit">-</button>
-                </form>
-            </li>
-        <% } %>
-    <% } %>
-</ul>
+        <h2>Snacks</h2>
+        <ul>
+            <% if (count.snacks) { %>
+                <% for (const [snack, snackCount] of Object.entries(count.snacks)) { %>
+                    <li>
+                        <%= snack %>: <%= snackCount %>
+                        <button class="reduceBtn" data-id="<%= snack %>" data-type="snack">-</button>
+                    </li>
+                <% } %>
+            <% } %>
+        </ul>
+    </div>
+<% } %>
