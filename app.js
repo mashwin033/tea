@@ -99,7 +99,6 @@ app.post('/reduce-count', async (req, res) => {
     try {
         const preferences = await client.lRange('preferences', 0, -1);
 
-        // Find and remove the first occurrence of the item in the specified type (drink or snack)
         for (let i = 0; i < preferences.length; i++) {
             const pref = JSON.parse(preferences[i]);
 
@@ -109,7 +108,6 @@ app.post('/reduce-count', async (req, res) => {
             }
         }
 
-        // Return updated results as JSON
         const updatedPreferences = await client.lRange('preferences', 0, -1);
         const count = updatedPreferences.reduce((acc, pref) => {
             const parsedPref = JSON.parse(pref);
