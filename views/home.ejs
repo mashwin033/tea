@@ -5,83 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snack Preferences</title>
     <link rel="stylesheet" href="/styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 100%;
-            max-width: 800px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2 {
-            text-align: center;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
-        }
-        label {
-            margin: 10px 0 5px;
-        }
-        select, input[type="text"] {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        button {
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-            background-color: #28a745;
-            color: #fff;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .item button {
-            background-color: #dc3545;
-            border: none;
-            cursor: pointer;
-            color: #fff;
-        }
-        .item button:hover {
-            background-color: #c82333;
-        }
-        .clear-btn {
-            background-color: #ffc107;
-        }
-        .clear-btn:hover {
-            background-color: #e0a800;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
         <h1>Enter Your Preferences</h1>
-        <form id="preferenceForm" action="/submit" method="POST">
+        <form id="preferencesForm" action="/submit" method="POST">
             <label for="drink">Favorite Drink:</label>
             <select id="drink" name="drink">
-                <option value="">Select a drink</option>
+                <option value="">--Select Drink--</option>
                 <option value="tea">Tea</option>
                 <option value="coffee">Coffee</option>
                 <option value="black tea">Black Tea</option>
@@ -93,7 +24,7 @@
 
             <label for="snack">Favorite Snack:</label>
             <select id="snack" name="snack">
-                <option value="">Select a snack</option>
+                <option value="">--Select Snack--</option>
                 <option value="puffs">Puffs</option>
                 <option value="ela ada">Ela Ada</option>
                 <option value="ullivada">Ullivada</option>
@@ -101,73 +32,14 @@
                 <option value="pazhampori">Pazhampori</option>
             </select>
 
-            <button type="submit">Submit</button>
-        </form>
-
-      
-
-        <h2>Results</h2>
-        <form id="countForm" action="/give-count" method="POST">
-            <button type="submit">Give the Count</button>
+            <button type="submit">Submit & Give Count</button>
         </form>
 
         <div id="results">
-            <!-- Results will be loaded here -->
+            <!-- The results will be dynamically updated here -->
         </div>
-
-          <form id="clearForm" action="/clear" method="POST">
-            <button class="clear-btn" type="submit">Clear Preferences</button>
-        </form>
     </div>
 
-    <script>
-        document.getElementById('countForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const response = await fetch('/give-count', { method: 'POST' });
-            const data = await response.json();
-
-            updateResults(data);
-        });
-
-        document.addEventListener('click', async (e) => {
-            if (e.target && e.target.classList.contains('reduce-btn')) {
-                e.preventDefault();
-
-                const form = e.target.closest('form');
-                const formData = new FormData(form);
-
-                const response = await fetch('/reduce-count', {
-                    method: 'POST',
-                    body: new URLSearchParams(formData),
-                });
-
-                const data = await response.json();
-                updateResults(data);
-            }
-        });
-
-        async function updateResults(data) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-
-            for (const [type, items] of Object.entries(data)) {
-                const typeTitle = document.createElement('h3');
-                typeTitle.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                resultsDiv.appendChild(typeTitle);
-
-                for (const [item, count] of Object.entries(items)) {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item';
-                    itemDiv.innerHTML = `${item}: ${count} 
-                        <form class="reduce-form" action="/reduce-count" method="POST" style="display:inline;">
-                            <input type="hidden" name="type" value="${type}">
-                            <input type="hidden" name="item" value="${item}">
-                            <button type="submit" class="reduce-btn">-</button>
-                        </form>`;
-                    resultsDiv.appendChild(itemDiv);
-                }
-            }
-        }
-    </script>
+    <script src="/script.js"></script>
 </body>
 </html>
