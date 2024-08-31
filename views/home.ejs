@@ -5,109 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snack Preference App</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        h1 {
-            margin-top: 20px;
-            font-size: 2em;
-            color: #333;
-        }
-
-        form {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        select, input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .message {
-            background-color: #dff0d8;
-            color: #3c763d;
-            padding: 10px;
-            margin-top: 20px;
-            border-radius: 4px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .results {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-        }
-
-        h2, h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        li {
-            background: #f9f9f9;
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 4px;
-            border: 1px solid #eee;
-        }
-
         .hidden {
             display: none;
         }
-
-        p {
-            text-align: center;
-            color: #888;
+        .minus {
+            margin-left: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 3px 7px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .reset {
+            margin-top: 20px;
+            background-color: #ffc107;
+            color: black;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .results ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .results li {
+            margin-bottom: 10px;
+        }
+        .results li span {
+            margin-right: 20px;
         }
     </style>
 </head>
@@ -153,7 +80,8 @@
             <h3>Drinks:</h3>
             <ul>
             <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
-                <li><%= drink %>: <%= drinkCount %>
+                <li>
+                    <span><%= drink %>: <%= drinkCount %></span>
                     <form action="/decrement" method="POST" style="display:inline;">
                         <input type="hidden" name="type" value="drink">
                         <input type="hidden" name="item" value="<%= drink %>">
@@ -166,7 +94,8 @@
             <h3>Snacks:</h3>
             <ul>
             <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
-                <li><%= snack %>: <%= snackCount %>
+                <li>
+                    <span><%= snack %>: <%= snackCount %></span>
                     <form action="/decrement" method="POST" style="display:inline;">
                         <input type="hidden" name="type" value="snack">
                         <input type="hidden" name="item" value="<%= snack %>">
