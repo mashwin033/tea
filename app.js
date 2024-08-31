@@ -22,27 +22,37 @@ app.set('view engine', 'ejs');
 app.get('/', async (req, res) => {
     try {
         const count = await getPreferenceCounts();
-        res.render('home', { count, message: null });
+        const drinks = await client.sMembers('unique_drinks');
+        const snacks = await client.sMembers('unique_snacks');
+        res.render('home', { count, drinks, snacks, message: null });
     } catch (err) {
-        console.error('Error fetching preferences:', err);
-        res.render('home', { count: null, message: 'Error fetching preferences' });
+        console.error('Error fetching data:', err);
+        res.render('home', { count: null, drinks: [], snacks: [], message: 'Error fetching data' });
     }
 });
 
 app.post('/submit', async (req, res) => {
     const { drink, snack } = req.body;
     try {
-        if (drink) await client.rPush('drinks', drink);
-        if (snack) await client.rPush('snacks', snack);
+        if (drink) {
+            await client.rPush('drinks', drink);
+            await client.sAdd('unique_drinks', drink);
+        }
+        if (snack) {
+            await client.rPush('snacks', snack);
+            await client.sAdd('unique_snacks', snack);
+        }
         
         const preference = JSON.stringify({ drink, snack });
         await client.rPush('preferences', preference);
         
         const count = await getPreferenceCounts();
-        res.render('home', { count, message: 'Preference submitted successfully!' });
+        const drinks = await client.sMembers('unique_drinks');
+        const snacks = await client.sMembers('unique_snacks');
+        res.render('home', { count, drinks, snacks, message: 'Preference submitted successfully!' });
     } catch (err) {
         console.error('Error submitting preference:', err);
-        res.render('home', { count: null, message: 'Error submitting preference' });
+        res.render('home', { count: null, drinks: [], snacks: [], message: 'Error submitting preference' });
     }
 });
 
