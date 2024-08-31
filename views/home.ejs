@@ -3,43 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snack Preferences</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Snack Preference App</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        form { margin-bottom: 20px; }
+        input, button { margin: 10px 0; }
+        ul { list-style-type: none; padding: 0; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Enter Your Preferences</h1>
-        <form id="preferencesForm" action="/submit" method="POST">
+    <h1>Snack Preference App</h1>
+    
+    <form action="/submit" method="POST">
+        <div>
             <label for="drink">Favorite Drink:</label>
-            <select id="drink" name="drink">
-                <option value="">--Select Drink--</option>
-                <option value="tea">Tea</option>
-                <option value="coffee">Coffee</option>
-                <option value="black tea">Black Tea</option>
-                <option value="black coffee">Black Coffee</option>
-                <option value="mint tea">Mint Tea</option>
-                <option value="boost">Boost</option>
-                <option value="horlicks">Horlicks</option>
-            </select>
-
-            <label for="snack">Favorite Snack:</label>
-            <select id="snack" name="snack">
-                <option value="">--Select Snack--</option>
-                <option value="puffs">Puffs</option>
-                <option value="ela ada">Ela Ada</option>
-                <option value="ullivada">Ullivada</option>
-                <option value="cutlet">Cutlet</option>
-                <option value="pazhampori">Pazhampori</option>
-            </select>
-
-            <button type="submit">Submit & Give Count</button>
-        </form>
-
-        <div id="results">
-            <!-- The results will be dynamically updated here -->
+            <input type="text" id="drink" name="drink" required>
         </div>
-    </div>
+        <div>
+            <label for="snack">Favorite Snack:</label>
+            <input type="text" id="snack" name="snack" required>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
 
-    <script src="/script.js"></script>
+    <% if (message) { %>
+        <p><strong><%= message %></strong></p>
+    <% } %>
+
+    <% if (count) { %>
+        <h2>Current Preferences:</h2>
+        
+        <h3>Drinks:</h3>
+        <ul>
+        <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
+            <li><%= drink %>: <%= drinkCount %></li>
+        <% } %>
+        </ul>
+
+        <h3>Snacks:</h3>
+        <ul>
+        <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
+            <li><%= snack %>: <%= snackCount %></li>
+        <% } %>
+        </ul>
+    <% } else { %>
+        <p>No preferences data available.</p>
+    <% } %>
 </body>
 </html>
