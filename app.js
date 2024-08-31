@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const redis = require('redis');
-const crypto = require('crypto');
 const app = express();
 const PORT = 3000;
 
@@ -19,7 +18,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-// Home Route
 app.get('/', async (req, res) => {
     try {
         const count = await getPreferenceCounts();
@@ -32,76 +30,68 @@ app.get('/', async (req, res) => {
     }
 });
 
-// Submit Route
 app.post('/submit', async (req, res) => {
     let { drink, snack, otherDrink, otherSnack } = req.body;
     try {
         if (drink === 'other' && otherDrink) {
-            drink = otherDrink;
+            drink = otherDrink.trim().toLowerCase();
         }
         if (snack === 'other' && otherSnack) {
-            snack = otherSnack;
+            snack = otherSnack.trim().toLowerCase();
         }
 
         if (drink) {
+            console.log(`Adding drink: "${drink}"`);
             await client.rPush('drinks', drink);
             await client.sAdd('unique_drinks', drink);
         }
         if (snack) {
+            console.log(`Adding snack: "${snack}"`);
             await client.rPush('snacks', snack);
             await client.sAdd('unique_snacks', snack);
         }
-
+        
         const preference = JSON.stringify({ drink, snack });
         await client.rPush('preferences', preference);
-
-        res.redirect('/');
+        
+        const count = await getPreferenceCounts();
+        const drinks = await client.sMembers('unique_drinks');
+        const snacks = await client.sMembers('unique_snacks');
+        res.render('home', { count, drinks, snacks, message: 'Preference submitted successfully!' });
     } catch (err) {
         console.error('Error submitting preference:', err);
         res.render('home', { count: null, drinks: [], snacks: [], message: 'Error submitting preference' });
     }
 });
 
-// Reset Route
-app.post('/reset', async (req, res) => {
-    try {
-        // Delete all the keys related to drinks and snacks
-        await client.del('drinks', 'snacks', 'preferences', 'unique_drinks', 'unique_snacks');
-        res.redirect('/');
-    } catch (err) {
-        console.error('Error resetting preferences:', err);
-        res.render('home', { count: null, drinks: [], snacks: [], message: 'Error resetting preferences' });
-    }
-});
-
-// Decrement Route
 app.post('/decrement', async (req, res) => {
     const { type, item } = req.body;
+    const normalizedItem = item.trim().toLowerCase();
     const listKey = type === 'drink' ? 'drinks' : 'snacks';
     const uniqueKey = type === 'drink' ? 'unique_drinks' : 'unique_snacks';
 
-    console.log(`Attempting to decrement ${type}: ${item}`);
+    console.log(`Attempting to decrement ${type}: ${normalizedItem}`);
 
     try {
         // Find the index of the item to decrement
-        const index = await client.lPos(listKey, item);
+        const index = await client.lPos(listKey, normalizedItem);
         console.log(`Index found: ${index}`);
 
         if (index !== null) {
             // Remove the first occurrence of the item
-            const removed = await client.lRem(listKey, 1, item);
+            const removed = await client.lRem(listKey, 1, normalizedItem);
             console.log(`Item removed: ${removed} time(s)`);
 
             // Check if the item should be removed from the unique set
             const remaining = await client.lRange(listKey, 0, -1);
             console.log(`Remaining items in ${listKey}:`, remaining);
 
-            if (!remaining.includes(item)) {
-                const removedFromSet = await client.sRem(uniqueKey, item);
+            if (!remaining.includes(normalizedItem)) {
+                const removedFromSet = await client.sRem(uniqueKey, normalizedItem);
                 console.log(`Item removed from ${uniqueKey}: ${removedFromSet}`);
             }
         } else {
-            console.log(`Item ${item} not found in ${listKey}`);
+            console.log(`Item ${normalizedItem} not found in ${listKey}`);
         }
 
         res.redirect('/');
@@ -111,7 +101,27 @@ app.post('/decrement', async (req, res) => {
     }
 });
 
-// Helper Function
+app.post('/reset', async (req, res) => {
+    try {
+        console.log('Resetting preferences...');
+
+        // Clear lists and sets
+        await client.del('preferences');
+        await client.del('drinks');
+        await client.del('snacks');
+        await client.del('unique_drinks');
+        await client.del('unique_snacks');
+
+        const count = await getPreferenceCounts();
+        const drinks = await client.sMembers('unique_drinks');
+        const snacks = await client.sMembers('unique_snacks');
+        res.render('home', { count, drinks, snacks, message: 'Preferences reset successfully!' });
+    } catch (err) {
+        console.error('Error resetting preferences:', err);
+        res.render('home', { count: null, drinks: [], snacks: [], message: 'Error resetting preferences' });
+    }
+});
+
 async function getPreferenceCounts() {
     const preferences = await client.lRange('preferences', 0, -1);
     return preferences.reduce((acc, pref) => {
