@@ -153,16 +153,31 @@
             <h3>Drinks:</h3>
             <ul>
             <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
-                <li><%= drink %>: <%= drinkCount %></li>
+                <li><%= drink %>: <%= drinkCount %>
+                    <form action="/decrement" method="POST" style="display:inline;">
+                        <input type="hidden" name="type" value="drink">
+                        <input type="hidden" name="item" value="<%= drink %>">
+                        <button type="submit" class="minus">-</button>
+                    </form>
+                </li>
             <% } %>
             </ul>
 
             <h3>Snacks:</h3>
             <ul>
             <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
-                <li><%= snack %>: <%= snackCount %></li>
+                <li><%= snack %>: <%= snackCount %>
+                    <form action="/decrement" method="POST" style="display:inline;">
+                        <input type="hidden" name="type" value="snack">
+                        <input type="hidden" name="item" value="<%= snack %>">
+                        <button type="submit" class="minus">-</button>
+                    </form>
+                </li>
             <% } %>
             </ul>
+            <form action="/reset" method="POST">
+                <button type="submit" class="reset">Reset All Preferences</button>
+            </form>
         </div>
     <% } else { %>
         <p>No preferences data available.</p>
