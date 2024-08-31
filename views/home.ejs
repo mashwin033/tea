@@ -5,45 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snack Preference App</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            color: #333;
-        }
+        /* Add your existing styles here */
         .hidden {
             display: none;
         }
-        .minus {
-            margin-left: 10px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 3px 7px;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        .reset {
-            margin-top: 20px;
-            background-color: #ffc107;
-            color: black;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .results ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        .results li {
-            margin-bottom: 10px;
+        .item-controls {
             display: flex;
+            gap: 10px;
             align-items: center;
         }
-        .results li span {
-            flex-grow: 1;
+        .item-controls button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .item-controls span {
+            font-size: 14px;
         }
     </style>
 </head>
@@ -76,6 +53,10 @@
         <button type="submit">Submit</button>
     </form>
 
+    <form action="/reset" method="POST" id="resetForm">
+        <button type="submit">Reset Counts</button>
+    </form>
+
     <% if (message) { %>
         <div class="message">
             <strong><%= message %></strong>
@@ -90,12 +71,14 @@
             <ul>
             <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
                 <li>
-                    <span><%= drink %>: <%= drinkCount %></span>
-                    <form action="/decrement" method="POST" style="display:inline;">
-                        <input type="hidden" name="type" value="drink">
-                        <input type="hidden" name="item" value="<%= drink %>">
-                        <button type="submit" class="minus">-</button>
-                    </form>
+                    <%= drink %>: <%= drinkCount %>
+                    <div class="item-controls">
+                        <form action="/decrement" method="POST" style="display:inline;">
+                            <input type="hidden" name="type" value="drink">
+                            <input type="hidden" name="item" value="<%= drink %>">
+                            <button type="submit">-</button>
+                        </form>
+                    </div>
                 </li>
             <% } %>
             </ul>
@@ -104,18 +87,17 @@
             <ul>
             <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
                 <li>
-                    <span><%= snack %>: <%= snackCount %></span>
-                    <form action="/decrement" method="POST" style="display:inline;">
-                        <input type="hidden" name="type" value="snack">
-                        <input type="hidden" name="item" value="<%= snack %>">
-                        <button type="submit" class="minus">-</button>
-                    </form>
+                    <%= snack %>: <%= snackCount %>
+                    <div class="item-controls">
+                        <form action="/decrement" method="POST" style="display:inline;">
+                            <input type="hidden" name="type" value="snack">
+                            <input type="hidden" name="item" value="<%= snack %>">
+                            <button type="submit">-</button>
+                        </form>
+                    </div>
                 </li>
             <% } %>
             </ul>
-            <form action="/reset" method="POST">
-                <button type="submit" class="reset">Reset All Preferences</button>
-            </form>
         </div>
     <% } else { %>
         <p>No preferences data available.</p>
