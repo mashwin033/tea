@@ -80,19 +80,30 @@ app.post('/decrement', async (req, res) => {
     const listKey = type === 'drink' ? 'drinks' : 'snacks';
     const uniqueKey = type === 'drink' ? 'unique_drinks' : 'unique_snacks';
 
+    console.log(`Attempting to decrement ${type}: ${item}`);
+
     try {
         // Find the index of the item to decrement
         const index = await client.lPos(listKey, item);
+        console.log(`Index found: ${index}`);
+
         if (index !== null) {
             // Remove the first occurrence of the item
-            await client.lRem(listKey, 1, item);
+            const removed = await client.lRem(listKey, 1, item);
+            console.log(`Item removed: ${removed} time(s)`);
 
             // Check if the item should be removed from the unique set
             const remaining = await client.lRange(listKey, 0, -1);
+            console.log(`Remaining items in ${listKey}:`, remaining);
+
             if (!remaining.includes(item)) {
-                await client.sRem(uniqueKey, item);
+                const removedFromSet = await client.sRem(uniqueKey, item);
+                console.log(`Item removed from ${uniqueKey}: ${removedFromSet}`);
             }
+        } else {
+            console.log(`Item ${item} not found in ${listKey}`);
         }
+
         res.redirect('/');
     } catch (err) {
         console.error('Error decrementing preference:', err);
