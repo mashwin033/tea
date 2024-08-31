@@ -3,46 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Snack Preference Results</title>
 </head>
 <body>
-    <h1>Results</h1>
-    
-    <!-- Clear Preferences Button -->
-    <form action="/clear" method="POST">
-        <button type="submit">Clear Preferences</button>
-    </form>
+    <h1>Snack Preference Results</h1>
 
-    <h2>Drinks</h2>
-    <ul>
-        <% for (const [drink, count] of Object.entries(count.drinks)) { %>
-            <li>
-                <%= drink %>: <%= count %>
-                <form class="reduce-form" action="/reduce-count" method="POST" style="display: inline;">
-                    <input type="hidden" name="id" value="<%= drink %>">
-                    <input type="hidden" name="type" value="drinks">
-                    <button type="submit" class="reduceBtn" data-id="<%= drink %>" data-type="drinks">-</button>
-                </form>
-            </li>
+    <% if (typeof count !== 'undefined') { %>
+        <h2>Drinks:</h2>
+        <ul>
+        <% for (const [drink, drinkCount] of Object.entries(count.drinks)) { %>
+            <li><%= drink %>: <%= drinkCount %></li>
         <% } %>
-    </ul>
+        </ul>
 
-    <h2>Snacks</h2>
-    <ul>
-        <% for (const [snack, count] of Object.entries(count.snacks)) { %>
-            <li>
-                <%= snack %>: <%= count %>
-                <form class="reduce-form" action="/reduce-count" method="POST" style="display: inline;">
-                    <input type="hidden" name="id" value="<%= snack %>">
-                    <input type="hidden" name="type" value="snacks">
-                    <button type="submit" class="reduceBtn" data-id="<%= snack %>" data-type="snacks">-</button>
-                </form>
-            </li>
+        <h2>Snacks:</h2>
+        <ul>
+        <% for (const [snack, snackCount] of Object.entries(count.snacks)) { %>
+            <li><%= snack %>: <%= snackCount %></li>
         <% } %>
-    </ul>
+        </ul>
+    <% } else { %>
+        <p>No preferences data available.</p>
+    <% } %>
 
-
-    <script src="/script.js"></script>
+    <a href="/">Back to Home</a>
 </body>
 </html>
