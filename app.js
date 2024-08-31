@@ -13,102 +13,49 @@ client.on('error', (err) => {
     console.error('Redis error:', err);
 });
 
-client.on('connect', () => {
-    console.log('Connected to Redis');
-});
+client.connect().catch(console.error);
 
-client.on('end', () => {
-    console.error('Redis connection closed. Reconnecting...');
-    client.connect().catch(console.error);
-});
-
-// Attempt to connect to Redis
-(async () => {
-    try {
-        await client.connect();
-    } catch (err) {
-        console.error('Failed to connect to Redis:', err);
-    }
-})();
-
-// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).send('Internal Server Error: ' + err.message);
-});
-
-// Routes
-app.get('/', (req, res) => {
-    res.render('home');
-});
-
-app.post('/submit', async (req, res, next) => {
-    const { drink, snack } = req.body;
-    console.log('Received submission:', { drink, snack });
-
+app.get('/', async (req, res) => {
     try {
-        // Check Redis connection
-        if (!client.isOpen) {
-            throw new Error('Redis client is not connected');
-        }
+        const count = await getPreferenceCounts();
+        res.render('home', { count, message: null });
+    } catch (err) {
+        console.error('Error fetching preferences:', err);
+        res.render('home', { count: null, message: 'Error fetching preferences' });
+    }
+});
 
-        if (drink) {
-            await client.rPush('drinks', drink);
-            console.log('Drink added:', drink);
-        }
-        if (snack) {
-            await client.rPush('snacks', snack);
-            console.log('Snack added:', snack);
-        }
-
+app.post('/submit', async (req, res) => {
+    const { drink, snack } = req.body;
+    try {
+        if (drink) await client.rPush('drinks', drink);
+        if (snack) await client.rPush('snacks', snack);
+        
         const preference = JSON.stringify({ drink, snack });
         await client.rPush('preferences', preference);
-        console.log('Preference added:', preference);
-
-        const preferences = await client.lRange('preferences', 0, -1);
-        console.log('Retrieved preferences:', preferences);
-
-        const count = preferences.reduce((acc, pref) => {
-            try {
-                const parsedPref = JSON.parse(pref);
-                if (parsedPref.drink) {
-                    acc.drinks[parsedPref.drink] = (acc.drinks[parsedPref.drink] || 0) + 1;
-                }
-                if (parsedPref.snack) {
-                    acc.snacks[parsedPref.snack] = (acc.snacks[parsedPref.snack] || 0) + 1;
-                }
-            } catch (parseError) {
-                console.error('Error parsing preference:', pref, parseError);
-            }
-            return acc;
-        }, { drinks: {}, snacks: {} });
-
-        console.log('Calculated count:', count);
-
-        res.render('results', { count });
+        
+        const count = await getPreferenceCounts();
+        res.render('home', { count, message: 'Preference submitted successfully!' });
     } catch (err) {
-        console.error('Error in /submit route:', err);
-        next(err);  // Pass error to error handling middleware
+        console.error('Error submitting preference:', err);
+        res.render('home', { count: null, message: 'Error submitting preference' });
     }
 });
 
-// Test Redis connection
-app.get('/test-redis', async (req, res) => {
-    try {
-        await client.set('test', 'value');
-        const value = await client.get('test');
-        res.send(`Redis test successful. Value: ${value}`);
-    } catch (err) {
-        res.status(500).send(`Redis test failed: ${err.message}`);
-    }
-});
+async function getPreferenceCounts() {
+    const preferences = await client.lRange('preferences', 0, -1);
+    return preferences.reduce((acc, pref) => {
+        const { drink, snack } = JSON.parse(pref);
+        if (drink) acc.drinks[drink] = (acc.drinks[drink] || 0) + 1;
+        if (snack) acc.snacks[snack] = (acc.snacks[snack] || 0) + 1;
+        return acc;
+    }, { drinks: {}, snacks: {} });
+}
 
-// Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
