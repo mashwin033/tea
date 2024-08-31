@@ -32,8 +32,15 @@ app.get('/', async (req, res) => {
 });
 
 app.post('/submit', async (req, res) => {
-    const { drink, snack } = req.body;
+    let { drink, snack, otherDrink, otherSnack } = req.body;
     try {
+        if (drink === 'other' && otherDrink) {
+            drink = otherDrink;
+        }
+        if (snack === 'other' && otherSnack) {
+            snack = otherSnack;
+        }
+
         if (drink) {
             await client.rPush('drinks', drink);
             await client.sAdd('unique_drinks', drink);
