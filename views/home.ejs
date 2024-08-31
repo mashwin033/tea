@@ -5,10 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snack Preference App</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        form { margin-bottom: 20px; }
-        input, button { margin: 10px 0; }
-        ul { list-style-type: none; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .message {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .results {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -17,37 +78,64 @@
     <form action="/submit" method="POST">
         <div>
             <label for="drink">Favorite Drink:</label>
-            <input type="text" id="drink" name="drink" required>
+            <select id="drink" name="drink" required>
+                <option value="">Select a drink</option>
+                <% drinks.forEach(drink => { %>
+                    <option value="<%= drink %>"><%= drink %></option>
+                <% }); %>
+                <option value="other">Other</option>
+            </select>
+            <input type="text" id="otherDrink" name="otherDrink" placeholder="Enter other drink" style="display: none;">
         </div>
         <div>
             <label for="snack">Favorite Snack:</label>
-            <input type="text" id="snack" name="snack" required>
+            <select id="snack" name="snack" required>
+                <option value="">Select a snack</option>
+                <% snacks.forEach(snack => { %>
+                    <option value="<%= snack %>"><%= snack %></option>
+                <% }); %>
+                <option value="other">Other</option>
+            </select>
+            <input type="text" id="otherSnack" name="otherSnack" placeholder="Enter other snack" style="display: none;">
         </div>
         <button type="submit">Submit</button>
     </form>
 
     <% if (message) { %>
-        <p><strong><%= message %></strong></p>
+        <div class="message">
+            <strong><%= message %></strong>
+        </div>
     <% } %>
 
     <% if (count) { %>
-        <h2>Current Preferences:</h2>
-        
-        <h3>Drinks:</h3>
-        <ul>
-        <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
-            <li><%= drink %>: <%= drinkCount %></li>
-        <% } %>
-        </ul>
+        <div class="results">
+            <h2>Current Preferences:</h2>
+            
+            <h3>Drinks:</h3>
+            <ul>
+            <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
+                <li><%= drink %>: <%= drinkCount %></li>
+            <% } %>
+            </ul>
 
-        <h3>Snacks:</h3>
-        <ul>
-        <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
-            <li><%= snack %>: <%= snackCount %></li>
-        <% } %>
-        </ul>
+            <h3>Snacks:</h3>
+            <ul>
+            <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
+                <li><%= snack %>: <%= snackCount %></li>
+            <% } %>
+            </ul>
+        </div>
     <% } else { %>
         <p>No preferences data available.</p>
     <% } %>
+
+    <script>
+        document.getElementById('drink').addEventListener('change', function() {
+            document.getElementById('otherDrink').style.display = this.value === 'other' ? 'block' : 'none';
+        });
+        document.getElementById('snack').addEventListener('change', function() {
+            document.getElementById('otherSnack').style.display = this.value === 'other' ? 'block' : 'none';
+        });
+    </script>
 </body>
 </html>
