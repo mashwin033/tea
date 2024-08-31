@@ -105,17 +105,17 @@ app.post('/reset', async (req, res) => {
     try {
         console.log('Resetting preferences...');
 
-        // Clear lists and sets
+        // Clear preference lists only
         await client.del('preferences');
         await client.del('drinks');
         await client.del('snacks');
-        await client.del('unique_drinks');
-        await client.del('unique_snacks');
 
-        const count = await getPreferenceCounts();
+        // Fetch current unique options to preserve dropdown data
         const drinks = await client.sMembers('unique_drinks');
         const snacks = await client.sMembers('unique_snacks');
-        res.render('home', { count, drinks, snacks, message: 'Preferences reset successfully!' });
+        
+        // Render page with reset confirmation
+        res.render('home', { count: { drinks: {}, snacks: {} }, drinks, snacks, message: 'Preferences reset successfully!' });
     } catch (err) {
         console.error('Error resetting preferences:', err);
         res.render('home', { count: null, drinks: [], snacks: [], message: 'Error resetting preferences' });
