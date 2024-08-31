@@ -65,7 +65,7 @@ app.post('/submit', async (req, res) => {
 
 app.post('/reset', async (req, res) => {
     try {
-        // Reset all lists and sets related to drinks and snacks
+        // Delete all the keys related to the drinks and snacks
         await client.del('drinks', 'snacks', 'preferences', 'unique_drinks', 'unique_snacks');
         res.redirect('/');
     } catch (err) {
@@ -80,9 +80,10 @@ app.post('/decrement', async (req, res) => {
     const uniqueKey = type === 'drink' ? 'unique_drinks' : 'unique_snacks';
 
     try {
-        // Decrement the item count by removing one occurrence from the list
+        // Find the index of the item to decrement
         const index = await client.lPos(listKey, item);
         if (index !== null) {
+            // Remove the first occurrence of the item
             await client.lRem(listKey, 1, item);
 
             // Check if the item should be removed from the unique set
@@ -97,6 +98,7 @@ app.post('/decrement', async (req, res) => {
         res.render('home', { count: null, drinks: [], snacks: [], message: 'Error decrementing preference' });
     }
 });
+
 
 async function getPreferenceCounts() {
     const preferences = await client.lRange('preferences', 0, -1);
