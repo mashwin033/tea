@@ -41,12 +41,10 @@ app.post('/submit', async (req, res) => {
         }
 
         if (drink) {
-            console.log(`Adding drink: "${drink}"`);
             await client.rPush('drinks', drink);
             await client.sAdd('unique_drinks', drink);
         }
         if (snack) {
-            console.log(`Adding snack: "${snack}"`);
             await client.rPush('snacks', snack);
             await client.sAdd('unique_snacks', snack);
         }
@@ -70,25 +68,14 @@ app.post('/decrement', async (req, res) => {
     const listKey = type === 'drink' ? 'drinks' : 'snacks';
     const uniqueKey = type === 'drink' ? 'unique_drinks' : 'unique_snacks';
 
-    console.log(`Attempting to decrement ${type}: ${normalizedItem}`);
-
     try {
-        // Find the index of the item to decrement
         const index = await client.lPos(listKey, normalizedItem);
-        console.log(`Index found: ${index}`);
-
         if (index !== null) {
-            // Remove the first occurrence of the item
-            const removed = await client.lRem(listKey, 1, normalizedItem);
-            console.log(`Item removed: ${removed} time(s)`);
+            await client.lRem(listKey, 1, normalizedItem);
 
-            // Check if the item should be removed from the unique set
             const remaining = await client.lRange(listKey, 0, -1);
-            console.log(`Remaining items in ${listKey}:`, remaining);
-
             if (!remaining.includes(normalizedItem)) {
-                const removedFromSet = await client.sRem(uniqueKey, normalizedItem);
-                console.log(`Item removed from ${uniqueKey}: ${removedFromSet}`);
+                await client.sRem(uniqueKey, normalizedItem);
             }
         } else {
             console.log(`Item ${normalizedItem} not found in ${listKey}`);
@@ -103,14 +90,12 @@ app.post('/decrement', async (req, res) => {
 
 app.post('/reset', async (req, res) => {
     try {
-        console.log('Resetting preferences...');
-
-        // Clear preference lists only
+        // Clear only the preferences lists, but keep unique options
         await client.del('preferences');
         await client.del('drinks');
         await client.del('snacks');
 
-        // Fetch current unique options to preserve dropdown data
+        // Fetch unique options to preserve dropdown data
         const drinks = await client.sMembers('unique_drinks');
         const snacks = await client.sMembers('unique_snacks');
         
