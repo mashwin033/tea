@@ -63,6 +63,38 @@ app.post('/submit', async (req, res) => {
     }
 });
 
+app.post('/reset', async (req, res) => {
+    try {
+        await client.del('drinks', 'snacks', 'preferences', 'unique_drinks', 'unique_snacks');
+        res.redirect('/');
+    } catch (err) {
+        console.error('Error resetting preferences:', err);
+        res.render('home', { count: null, drinks: [], snacks: [], message: 'Error resetting preferences' });
+    }
+});
+
+app.post('/decrement', async (req, res) => {
+    const { type, item } = req.body;
+    const listKey = type === 'drink' ? 'drinks' : 'snacks';
+    const uniqueKey = type === 'drink' ? 'unique_drinks' : 'unique_snacks';
+
+    try {
+        const index = await client.lPos(listKey, item);
+        if (index !== null) {
+            await client.lRem(listKey, 1, item);
+            const remaining = await client.lRange(listKey, 0, -1);
+            if (!remaining.includes(item)) {
+                await client.sRem(uniqueKey, item);
+            }
+        }
+        res.redirect('/');
+    } catch (err) {
+        console.error('Error decrementing preference:', err);
+        res.render('home', { count: null, drinks: [], snacks: [], message: 'Error decrementing preference' });
+    }
+});
+
+
 async function getPreferenceCounts() {
     const preferences = await client.lRange('preferences', 0, -1);
     return preferences.reduce((acc, pref) => {
@@ -72,6 +104,7 @@ async function getPreferenceCounts() {
         return acc;
     }, { drinks: {}, snacks: {} });
 }
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
