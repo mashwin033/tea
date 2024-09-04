@@ -16,6 +16,7 @@
         h1, h2 {
             color: #444;
             text-align: center;
+            margin-bottom: 20px;
         }
         form {
             background: #fff;
@@ -101,6 +102,35 @@
         }
         .reset-btn:hover {
             background-color: #018786;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            form {
+                padding: 15px;
+            }
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .quantity-control {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .quantity-control button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+            select, input {
+                padding: 8px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
