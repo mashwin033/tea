@@ -51,7 +51,7 @@ app.post('/submit', async (req, res) => {
             orders.snacks[snackName] = (orders.snacks[snackName] || 0) + parseInt(snackQuantity || 0);
         }
 
-        console.log('Orders before saving to Redis:', orders);  // Add this log
+        console.log('Aggregated Orders before saving to Redis:', orders);  // Debug log to see the aggregated structure
 
         await saveOrdersToCache(orders);
         res.redirect('/');
@@ -60,6 +60,7 @@ app.post('/submit', async (req, res) => {
         res.status(500).send('Error saving order');
     }
 });
+
 
 
 
