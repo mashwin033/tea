@@ -1,142 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snack Preference App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .hidden {
-            display: none;
-        }
-        .results {
-            margin-top: 20px;
-        }
-        .results h3 {
-            margin-bottom: 10px;
-        }
-        .item-controls form {
-            display: inline;
-        }
-        .message {
-            color: green;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Snack Preference App</h1>
-    
-    <form action="/submit" method="POST" id="preferenceForm">
-        <div>
-            <label for="drink">Favorite Drink:</label>
-            <select id="drink" name="drink" required>
-                <option value="">Select a drink</option>
-                <% drinks.forEach(drink => { %>
-                    <option value="<%= drink %>"><%= drink %></option>
-                <% }); %>
-                <option value="other">Other</option>
-            </select>
-            <input type="text" id="otherDrink" name="otherDrink" placeholder="Enter other drink" class="hidden">
-        </div>
-        <div>
-            <label for="drinkQuantity">Drink Quantity:</label>
-            <input type="number" id="drinkQuantity" name="drinkQuantity" min="1" value="1" required>
-        </div>
-        <div>
-            <label for="snack">Favorite Snack:</label>
-            <select id="snack" name="snack" required>
-                <option value="">Select a snack</option>
-                <% snacks.forEach(snack => { %>
-                    <option value="<%= snack %>"><%= snack %></option>
-                <% }); %>
-                <option value="other">Other</option>
-            </select>
-            <input type="text" id="otherSnack" name="otherSnack" placeholder="Enter other snack" class="hidden">
-        </div>
-        <div>
-            <label for="snackQuantity">Snack Quantity:</label>
-            <input type="number" id="snackQuantity" name="snackQuantity" min="1" value="1" required>
-        </div>
-        <button type="submit">Submit</button>
-    </form>
+const express = require('express');
+const bodyParser = require('body-parser');
+const redis = require('redis');
+const app = express();
+const port = 3000;
 
-    <% if (message) { %>
-        <div class="message">
-            <strong><%= message %></strong>
-        </div>
-    <% } %>
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
-    <% if (count) { %>
-        <div class="results">
-            <h2>Current Preferences:</h2>
-            
-            <h3>Drinks:</h3>
-            <ul>
-            <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
-                <li>
-                    <%= drink %>: <%= drinkCount %>
-                    <div class="item-controls">
-                        <form action="/decrement" method="POST">
-                            <input type="hidden" name="type" value="drink">
-                            <input type="hidden" name="item" value="<%= drink %>">
-                            <button type="submit">-</button>
-                        </form>
-                    </div>
-                </li>
-            <% } %>
-            </ul>
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const client = redis.createClient({ url: redisUrl });
 
-            <h3>Snacks:</h3>
-            <ul>
-            <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
-                <li>
-                    <%= snack %>: <%= snackCount %>
-                    <div class="item-controls">
-                        <form action="/decrement" method="POST">
-                            <input type="hidden" name="type" value="snack">
-                            <input type="hidden" name="item" value="<%= snack %>">
-                            <button type="submit">-</button>
-                        </form>
-                    </div>
-                </li>
-            <% } %>
-            </ul>
-            <form action="/reset" method="POST">
-                <button type="submit">Reset All</button>
-            </form>
-        </div>
-    <% } else { %>
-        <p>No preferences data available.</p>
-    <% } %>
+(async () => {
+    await client.connect();
+})();
 
-    <script>
-        document.getElementById('drink').addEventListener('change', function() {
-            document.getElementById('otherDrink').classList.toggle('hidden', this.value !== 'other');
-        });
-        document.getElementById('snack').addEventListener('change', function() {
-            document.getElementById('otherSnack').classList.toggle('hidden', this.value !== 'other');
-        });
+client.on('error', (err) => console.log('Redis Client Error', err));
 
-        document.getElementById('preferenceForm').addEventListener('submit', function(e) {
-            const drinkSelect = document.getElementById('drink');
-            const snackSelect = document.getElementById('snack');
-            const otherDrink = document.getElementById('otherDrink');
-            const otherSnack = document.getElementById('otherSnack');
+const drinks = ['Tea', 'Coffee', 'Black Tea', 'Black Coffee', 'Lime Tea', 'Boost', 'Horlicks', 'Other'];
+const snacks = ['Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch', 'Other'];
 
-            if (drinkSelect.value === 'other' && otherDrink.value.trim() === '') {
-                e.preventDefault();
-                alert('Please enter a custom drink');
-            }
-            if (snackSelect.value === 'other' && otherSnack.value.trim() === '') {
-                e.preventDefault();
-                alert('Please enter a custom snack');
-            }
-        });
-    </script>
-</body>
-</html>
+app.get('/', async (req, res) => {
+    try {
+        const order = await getOrderFromCache();
+        res.render('home', { order, drinks, snacks });
+    } catch (error) {
+        console.error('Error fetching order:', error);
+        res.status(500).send('Error fetching order');
+    }
+});
+
+app.post('/submit', async (req, res) => {
+    const { drinkChoice, drinkOther, drinkQuantity, snackChoice, snackOther, snackQuantity } = req.body;
+
+    const order = {
+        drink: {
+            name: drinkChoice === 'Other' ? drinkOther : drinkChoice,
+            quantity: parseInt(drinkQuantity) || 0
+        },
+        snack: {
+            name: snackChoice === 'Other' ? snackOther : snackChoice,
+            quantity: parseInt(snackQuantity) || 0
+        }
+    };
+
+    try {
+        await saveOrderToCache(order);
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error saving order:', error);
+        res.status(500).send('Error saving order');
+    }
+});
+
+app.post('/decrement/:item', async (req, res) => {
+    const item = req.params.item;
+    try {
+        const order = await getOrderFromCache();
+        if (order[item].quantity > 0) {
+            order[item].quantity--;
+            await saveOrderToCache(order);
+        }
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error updating order:', error);
+        res.status(500).send('Error updating order');
+    }
+});
+
+app.post('/reset', async (req, res) => {
+    try {
+        await client.del('order');
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error resetting order:', error);
+        res.status(500).send('Error resetting order');
+    }
+});
+
+async function getOrderFromCache() {
+    const cachedOrder = await client.get('order');
+    return cachedOrder ? JSON.parse(cachedOrder) : { drink: { name: '', quantity: 0 }, snack: { name: '', quantity: 0 } };
+}
+
+async function saveOrderToCache(order) {
+    await client.set('order', JSON.stringify(order));
+}
+
+app.listen(port, () => {
+    console.log(`App listening at http://localhost:${port}`);
+});
