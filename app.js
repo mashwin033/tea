@@ -11,13 +11,6 @@ app.use(express.static('public'));
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const client = redis.createClient({ url: redisUrl });
 
-(async () => {
-    await client.connect();
-    await client.flushAll();  // This command clears all data in Redis
-    console.log('Redis database cleared.');
-    await client.quit();
-})();
-
 
 (async () => {
     await client.connect();
