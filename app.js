@@ -36,27 +36,17 @@ app.post('/submit', async (req, res) => {
     try {
         const orders = await getOrdersFromCache();
 
-        const newOrder = {};
-
         if (drinkChoice !== 'Select') {
-            newOrder.drink = {
-                name: drinkChoice === 'Other' ? drinkOther : drinkChoice,
-                quantity: parseInt(drinkQuantity) || 0
-            };
+            const drinkName = drinkChoice === 'Other' ? drinkOther : drinkChoice;
+            orders.drinks[drinkName] = (orders.drinks[drinkName] || 0) + parseInt(drinkQuantity || 0);
         }
 
         if (snackChoice !== 'Select') {
-            newOrder.snack = {
-                name: snackChoice === 'Other' ? snackOther : snackChoice,
-                quantity: parseInt(snackQuantity) || 0
-            };
+            const snackName = snackChoice === 'Other' ? snackOther : snackChoice;
+            orders.snacks[snackName] = (orders.snacks[snackName] || 0) + parseInt(snackQuantity || 0);
         }
 
-        if (Object.keys(newOrder).length > 0) {
-            orders.push(newOrder);
-            await saveOrdersToCache(orders);
-        }
-
+        await saveOrdersToCache(orders);
         res.redirect('/');
     } catch (error) {
         console.error('Error saving order:', error);
@@ -64,17 +54,19 @@ app.post('/submit', async (req, res) => {
     }
 });
 
-app.post('/decrement/:index/:item', async (req, res) => {
-    const { index, item } = req.params;
+app.post('/update/:type/:item', async (req, res) => {
+    const { type, item } = req.params;
+    const { action } = req.body;
     try {
         const orders = await getOrdersFromCache();
-        if (orders[index] && orders[index][item] && orders[index][item].quantity > 0) {
-            orders[index][item].quantity--;
-            if (orders[index][item].quantity === 0) {
-                delete orders[index][item];
+        if (orders[type][item]) {
+            if (action === 'increment') {
+                orders[type][item]++;
+            } else if (action === 'decrement' && orders[type][item] > 0) {
+                orders[type][item]--;
             }
-            if (Object.keys(orders[index]).length === 0) {
-                orders.splice(index, 1);
+            if (orders[type][item] === 0) {
+                delete orders[type][item];
             }
             await saveOrdersToCache(orders);
         }
@@ -87,7 +79,7 @@ app.post('/decrement/:index/:item', async (req, res) => {
 
 app.post('/reset', async (req, res) => {
     try {
-        await client.del('orders');
+        await saveOrdersToCache({ drinks: {}, snacks: {} });
         res.redirect('/');
     } catch (error) {
         console.error('Error resetting orders:', error);
@@ -97,7 +89,7 @@ app.post('/reset', async (req, res) => {
 
 async function getOrdersFromCache() {
     const cachedOrders = await client.get('orders');
-    return cachedOrders ? JSON.parse(cachedOrders) : [];
+    return cachedOrders ? JSON.parse(cachedOrders) : { drinks: {}, snacks: {} };
 }
 
 async function saveOrdersToCache(orders) {
