@@ -40,17 +40,24 @@
             border: 1px solid #ddd;
             padding: 10px;
         }
+        .result-section {
+            margin-bottom: 20px;
+        }
         .result-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
-        .decrement-btn {
-            background-color: #f44336;
+        .quantity-control {
+            display: flex;
+            align-items: center;
         }
-        .decrement-btn:hover {
-            background-color: #da190b;
+        .quantity-control button {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            margin: 0 5px;
         }
         .reset-btn {
             background-color: #008CBA;
@@ -89,39 +96,56 @@
     </form>
 
     <div id="results">
-        <h2>All Orders:</h2>
-        <% if (orders.length > 0) { %>
-            <% orders.forEach((order, index) => { %>
-                <div class="result-item">
-                    <p>
-                        <% if (order.drink) { %>
-                            Drink: <%= order.drink.name %> (Quantity: <%= order.drink.quantity %>)
-                        <% } %>
-                        <% if (order.drink && order.snack) { %>, <% } %>
-                        <% if (order.snack) { %>
-                            Snack: <%= order.snack.name %> (Quantity: <%= order.snack.quantity %>)
-                        <% } %>
-                    </p>
-                    <div>
-                        <% if (order.drink) { %>
-                            <form action="/decrement/<%= index %>/drink" method="POST" style="display: inline;">
-                                <button type="submit" class="decrement-btn">- Drink</button>
+        <h2>Order Summary</h2>
+        <div class="result-section">
+            <h3>Drinks</h3>
+            <% if (Object.keys(orders.drinks).length > 0) { %>
+                <% for (const [drink, quantity] of Object.entries(orders.drinks)) { %>
+                    <div class="result-item">
+                        <span><%= drink %>: <%= quantity %></span>
+                        <div class="quantity-control">
+                            <form action="/update/drinks/<%= drink %>" method="POST" style="display: inline;">
+                                <input type="hidden" name="action" value="decrement">
+                                <button type="submit">-</button>
                             </form>
-                        <% } %>
-                        <% if (order.snack) { %>
-                            <form action="/decrement/<%= index %>/snack" method="POST" style="display: inline;">
-                                <button type="submit" class="decrement-btn">- Snack</button>
+                            <span><%= quantity %></span>
+                            <form action="/update/drinks/<%= drink %>" method="POST" style="display: inline;">
+                                <input type="hidden" name="action" value="increment">
+                                <button type="submit">+</button>
                             </form>
-                        <% } %>
+                        </div>
                     </div>
-                </div>
-            <% }); %>
-            <form action="/reset" method="POST">
-                <button type="submit" class="reset-btn">Reset All Orders</button>
-            </form>
-        <% } else { %>
-            <p>No orders placed yet.</p>
-        <% } %>
+                <% } %>
+            <% } else { %>
+                <p>No drinks ordered yet.</p>
+            <% } %>
+        </div>
+        <div class="result-section">
+            <h3>Snacks</h3>
+            <% if (Object.keys(orders.snacks).length > 0) { %>
+                <% for (const [snack, quantity] of Object.entries(orders.snacks)) { %>
+                    <div class="result-item">
+                        <span><%= snack %>: <%= quantity %></span>
+                        <div class="quantity-control">
+                            <form action="/update/snacks/<%= snack %>" method="POST" style="display: inline;">
+                                <input type="hidden" name="action" value="decrement">
+                                <button type="submit">-</button>
+                            </form>
+                            <span><%= quantity %></span>
+                            <form action="/update/snacks/<%= snack %>" method="POST" style="display: inline;">
+                                <input type="hidden" name="action" value="increment">
+                                <button type="submit">+</button>
+                            </form>
+                        </div>
+                    </div>
+                <% } %>
+            <% } else { %>
+                <p>No snacks ordered yet.</p>
+            <% } %>
+        </div>
+        <form action="/reset" method="POST">
+            <button type="submit" class="reset-btn">Reset All Orders</button>
+        </form>
     </div>
 
     <script>
