@@ -11,7 +11,7 @@
             margin: 0 auto;
             padding: 20px;
         }
-        h1 {
+        h1, h2 {
             text-align: center;
         }
         form {
@@ -64,63 +64,88 @@
     <h1>Drink and Snack Order</h1>
     <form action="/submit" method="POST">
         <label for="drinkChoice">Choose a drink:</label>
-        <select name="drinkChoice" id="drinkChoice" onchange="toggleOtherInput('drink')">
+        <select name="drinkChoice" id="drinkChoice" onchange="toggleInputs('drink')">
             <% drinks.forEach(drink => { %>
-                <option value="<%= drink %>" <%= order.drink.name === drink ? 'selected' : '' %>><%= drink %></option>
+                <option value="<%= drink %>"><%= drink %></option>
             <% }); %>
         </select>
         <input type="text" name="drinkOther" id="drinkOther" placeholder="Specify other drink" style="display: none;">
         
         <label for="drinkQuantity">Drink quantity:</label>
-        <input type="number" name="drinkQuantity" id="drinkQuantity" min="0" value="<%= order.drink.quantity %>">
+        <input type="number" name="drinkQuantity" id="drinkQuantity" min="1" value="1" disabled>
         
         <label for="snackChoice">Choose a snack:</label>
-        <select name="snackChoice" id="snackChoice" onchange="toggleOtherInput('snack')">
+        <select name="snackChoice" id="snackChoice" onchange="toggleInputs('snack')">
             <% snacks.forEach(snack => { %>
-                <option value="<%= snack %>" <%= order.snack.name === snack ? 'selected' : '' %>><%= snack %></option>
+                <option value="<%= snack %>"><%= snack %></option>
             <% }); %>
         </select>
         <input type="text" name="snackOther" id="snackOther" placeholder="Specify other snack" style="display: none;">
         
         <label for="snackQuantity">Snack quantity:</label>
-        <input type="number" name="snackQuantity" id="snackQuantity" min="0" value="<%= order.snack.quantity %>">
+        <input type="number" name="snackQuantity" id="snackQuantity" min="1" value="1" disabled>
         
         <button type="submit">Submit Order</button>
     </form>
 
     <div id="results">
-        <h2>Your Order:</h2>
-        <% if (order.drink.name || order.snack.name) { %>
-            <div class="result-item">
-                <p>Drink: <%= order.drink.name %> (Quantity: <%= order.drink.quantity %>)</p>
-                <form action="/decrement/drink" method="POST" style="display: inline;">
-                    <button type="submit" class="decrement-btn">-</button>
-                </form>
-            </div>
-            <div class="result-item">
-                <p>Snack: <%= order.snack.name %> (Quantity: <%= order.snack.quantity %>)</p>
-                <form action="/decrement/snack" method="POST" style="display: inline;">
-                    <button type="submit" class="decrement-btn">-</button>
-                </form>
-            </div>
+        <h2>All Orders:</h2>
+        <% if (orders.length > 0) { %>
+            <% orders.forEach((order, index) => { %>
+                <div class="result-item">
+                    <p>
+                        <% if (order.drink) { %>
+                            Drink: <%= order.drink.name %> (Quantity: <%= order.drink.quantity %>)
+                        <% } %>
+                        <% if (order.drink && order.snack) { %>, <% } %>
+                        <% if (order.snack) { %>
+                            Snack: <%= order.snack.name %> (Quantity: <%= order.snack.quantity %>)
+                        <% } %>
+                    </p>
+                    <div>
+                        <% if (order.drink) { %>
+                            <form action="/decrement/<%= index %>/drink" method="POST" style="display: inline;">
+                                <button type="submit" class="decrement-btn">- Drink</button>
+                            </form>
+                        <% } %>
+                        <% if (order.snack) { %>
+                            <form action="/decrement/<%= index %>/snack" method="POST" style="display: inline;">
+                                <button type="submit" class="decrement-btn">- Snack</button>
+                            </form>
+                        <% } %>
+                    </div>
+                </div>
+            <% }); %>
             <form action="/reset" method="POST">
-                <button type="submit" class="reset-btn">Reset Order</button>
+                <button type="submit" class="reset-btn">Reset All Orders</button>
             </form>
         <% } else { %>
-            <p>No items ordered yet.</p>
+            <p>No orders placed yet.</p>
         <% } %>
     </div>
 
     <script>
-        function toggleOtherInput(type) {
+        function toggleInputs(type) {
             const select = document.getElementById(`${type}Choice`);
             const otherInput = document.getElementById(`${type}Other`);
-            otherInput.style.display = select.value === 'Other' ? 'block' : 'none';
+            const quantityInput = document.getElementById(`${type}Quantity`);
+
+            if (select.value === 'Select') {
+                otherInput.style.display = 'none';
+                quantityInput.disabled = true;
+            } else {
+                quantityInput.disabled = false;
+                if (select.value === 'Other') {
+                    otherInput.style.display = 'block';
+                } else {
+                    otherInput.style.display = 'none';
+                }
+            }
         }
 
-        // Initialize the visibility of "Other" inputs
-        toggleOtherInput('drink');
-        toggleOtherInput('snack');
+        // Initialize the visibility and state of inputs
+        toggleInputs('drink');
+        toggleInputs('snack');
     </script>
 </body>
 </html>
