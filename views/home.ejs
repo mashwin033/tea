@@ -3,96 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snack and Drink Preference App</title>
+    <title>Snack Preference App</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        h1, h2 {
-            color: #2c3e50;
-        }
-        form, .results {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        select, input[type="number"], input[type="text"], button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .message {
-            background-color: #2ecc71;
-            color: white;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #ecf0f1;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .decrement-btn {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .decrement-btn:hover {
-            background-color: #c0392b;
-        }
-        .reset-btn {
-            background-color: #f39c12;
-        }
-        .reset-btn:hover {
-            background-color: #d35400;
+            margin: 20px;
         }
         .hidden {
             display: none;
         }
+        .results {
+            margin-top: 20px;
+        }
+        .results h3 {
+            margin-bottom: 10px;
+        }
+        .item-controls form {
+            display: inline;
+        }
+        .message {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Snack and Drink Preference App</h1>
+    <h1>Snack Preference App</h1>
     
-    <form id="preferenceForm">
+    <form action="/submit" method="POST" id="preferenceForm">
         <div>
             <label for="drink">Favorite Drink:</label>
             <select id="drink" name="drink" required>
@@ -103,8 +42,10 @@
                 <option value="other">Other</option>
             </select>
             <input type="text" id="otherDrink" name="otherDrink" placeholder="Enter other drink" class="hidden">
-            <label for="drinkQuantity">Quantity:</label>
-            <input type="number" id="drinkQuantity" name="drinkQuantity" min="1" value="1">
+        </div>
+        <div>
+            <label for="drinkQuantity">Drink Quantity:</label>
+            <input type="number" id="drinkQuantity" name="drinkQuantity" min="1" value="1" required>
         </div>
         <div>
             <label for="snack">Favorite Snack:</label>
@@ -116,8 +57,10 @@
                 <option value="other">Other</option>
             </select>
             <input type="text" id="otherSnack" name="otherSnack" placeholder="Enter other snack" class="hidden">
-            <label for="snackQuantity">Quantity:</label>
-            <input type="number" id="snackQuantity" name="snackQuantity" min="1" value="1">
+        </div>
+        <div>
+            <label for="snackQuantity">Snack Quantity:</label>
+            <input type="number" id="snackQuantity" name="snackQuantity" min="1" value="1" required>
         </div>
         <button type="submit">Submit</button>
     </form>
@@ -128,31 +71,48 @@
         </div>
     <% } %>
 
-    <div id="results" class="results">
-        <h2>Current Preferences:</h2>
-        
-        <h3>Drinks:</h3>
-        <ul id="drinksList">
-        <% for (const [drink, count] of Object.entries(preferences.drinks)) { %>
-            <li>
-                <%= drink %>: <%= count %>
-                <button class="decrement-btn" data-type="drink" data-item="<%= drink %>">-</button>
-            </li>
-        <% } %>
-        </ul>
+    <% if (count) { %>
+        <div class="results">
+            <h2>Current Preferences:</h2>
+            
+            <h3>Drinks:</h3>
+            <ul>
+            <% for (const [drink, drinkCount] of Object.entries(count.drinks).sort((a, b) => b[1] - a[1])) { %>
+                <li>
+                    <%= drink %>: <%= drinkCount %>
+                    <div class="item-controls">
+                        <form action="/decrement" method="POST">
+                            <input type="hidden" name="type" value="drink">
+                            <input type="hidden" name="item" value="<%= drink %>">
+                            <button type="submit">-</button>
+                        </form>
+                    </div>
+                </li>
+            <% } %>
+            </ul>
 
-        <h3>Snacks:</h3>
-        <ul id="snacksList">
-        <% for (const [snack, count] of Object.entries(preferences.snacks)) { %>
-            <li>
-                <%= snack %>: <%= count %>
-                <button class="decrement-btn" data-type="snack" data-item="<%= snack %>">-</button>
-            </li>
-        <% } %>
-        </ul>
-
-        <button id="resetBtn" class="reset-btn">Reset All Preferences</button>
-    </div>
+            <h3>Snacks:</h3>
+            <ul>
+            <% for (const [snack, snackCount] of Object.entries(count.snacks).sort((a, b) => b[1] - a[1])) { %>
+                <li>
+                    <%= snack %>: <%= snackCount %>
+                    <div class="item-controls">
+                        <form action="/decrement" method="POST">
+                            <input type="hidden" name="type" value="snack">
+                            <input type="hidden" name="item" value="<%= snack %>">
+                            <button type="submit">-</button>
+                        </form>
+                    </div>
+                </li>
+            <% } %>
+            </ul>
+            <form action="/reset" method="POST">
+                <button type="submit">Reset All</button>
+            </form>
+        </div>
+    <% } else { %>
+        <p>No preferences data available.</p>
+    <% } %>
 
     <script>
         document.getElementById('drink').addEventListener('change', function() {
@@ -162,55 +122,21 @@
             document.getElementById('otherSnack').classList.toggle('hidden', this.value !== 'other');
         });
 
-        document.getElementById('preferenceForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const response = await fetch('/submit', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.text();
-            document.body.innerHTML = result;
-            attachEventListeners();
+        document.getElementById('preferenceForm').addEventListener('submit', function(e) {
+            const drinkSelect = document.getElementById('drink');
+            const snackSelect = document.getElementById('snack');
+            const otherDrink = document.getElementById('otherDrink');
+            const otherSnack = document.getElementById('otherSnack');
+
+            if (drinkSelect.value === 'other' && otherDrink.value.trim() === '') {
+                e.preventDefault();
+                alert('Please enter a custom drink');
+            }
+            if (snackSelect.value === 'other' && otherSnack.value.trim() === '') {
+                e.preventDefault();
+                alert('Please enter a custom snack');
+            }
         });
-
-        function attachEventListeners() {
-            document.querySelectorAll('.decrement-btn').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    const type = this.dataset.type;
-                    const item = this.dataset.item;
-                    const response = await fetch('/decrement', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ type, item })
-                    });
-                    if (response.ok) {
-                        const li = this.closest('li');
-                        const countElement = li.firstChild;
-                        let count = parseInt(countElement.textContent.split(':')[1]);
-                        if (count > 1) {
-                            countElement.textContent = `${item}: ${count - 1}`;
-                        } else {
-                            li.remove();
-                        }
-                    }
-                });
-            });
-
-            document.getElementById('resetBtn').addEventListener('click', async function() {
-                const response = await fetch('/reset', {
-                    method: 'POST'
-                });
-                if (response.ok) {
-                    document.getElementById('drinksList').innerHTML = '';
-                    document.getElementById('snacksList').innerHTML = '';
-                }
-            });
-        }
-
-        attachEventListeners();
     </script>
 </body>
 </html>
