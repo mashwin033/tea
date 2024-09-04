@@ -18,8 +18,8 @@ const client = redis.createClient({ url: redisUrl });
 
 client.on('error', (err) => console.log('Redis Client Error', err));
 
-const drinks = ['Select', 'Tea', 'Coffee', 'Black Tea', 'Black Coffee', 'Lime Tea', 'Boost', 'Horlicks', 'Other'];
-const snacks = ['Select', 'Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch', 'Other'];
+const drinks = ['Select', 'Tea', 'Coffee', 'Black Tea', 'Black Coffee', 'Lime Tea','Mint Tea', 'Boost', 'Horlicks', 'Other'];
+const snacks = ['Select', 'Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch','Sughiyan','Porotta Roll','Muffins','Cream Bun','DoughNut', 'Other'];
 
 app.get('/', async (req, res) => {
     try {
