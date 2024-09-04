@@ -1,92 +1,126 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const redis = require('redis');
-const app = express();
-const port = 3000;
-
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
-
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const client = redis.createClient({ url: redisUrl });
-
-(async () => {
-    await client.connect();
-})();
-
-client.on('error', (err) => console.log('Redis Client Error', err));
-
-const drinks = ['Tea', 'Coffee', 'Black Tea', 'Black Coffee', 'Lime Tea', 'Boost', 'Horlicks', 'Other'];
-const snacks = ['Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch', 'Other'];
-
-app.get('/', async (req, res) => {
-    try {
-        const order = await getOrderFromCache();
-        res.render('home', { order, drinks, snacks });
-    } catch (error) {
-        console.error('Error fetching order:', error);
-        res.status(500).send('Error fetching order');
-    }
-});
-
-app.post('/submit', async (req, res) => {
-    const { drinkChoice, drinkOther, drinkQuantity, snackChoice, snackOther, snackQuantity } = req.body;
-
-    const order = {
-        drink: {
-            name: drinkChoice === 'Other' ? drinkOther : drinkChoice,
-            quantity: parseInt(drinkQuantity) || 0
-        },
-        snack: {
-            name: snackChoice === 'Other' ? snackOther : snackChoice,
-            quantity: parseInt(snackQuantity) || 0
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drink and Snack Order</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
-    };
-
-    try {
-        await saveOrderToCache(order);
-        res.redirect('/');
-    } catch (error) {
-        console.error('Error saving order:', error);
-        res.status(500).send('Error saving order');
-    }
-});
-
-app.post('/decrement/:item', async (req, res) => {
-    const item = req.params.item;
-    try {
-        const order = await getOrderFromCache();
-        if (order[item].quantity > 0) {
-            order[item].quantity--;
-            await saveOrderToCache(order);
+        h1 {
+            text-align: center;
         }
-        res.redirect('/');
-    } catch (error) {
-        console.error('Error updating order:', error);
-        res.status(500).send('Error updating order');
-    }
-});
+        form {
+            display: grid;
+            gap: 10px;
+        }
+        label {
+            font-weight: bold;
+        }
+        select, input {
+            width: 100%;
+            padding: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .decrement-btn {
+            background-color: #f44336;
+        }
+        .decrement-btn:hover {
+            background-color: #da190b;
+        }
+        .reset-btn {
+            background-color: #008CBA;
+        }
+        .reset-btn:hover {
+            background-color: #007399;
+        }
+    </style>
+</head>
+<body>
+    <h1>Drink and Snack Order</h1>
+    <form action="/submit" method="POST">
+        <label for="drinkChoice">Choose a drink:</label>
+        <select name="drinkChoice" id="drinkChoice" onchange="toggleOtherInput('drink')">
+            <% drinks.forEach(drink => { %>
+                <option value="<%= drink %>" <%= order.drink.name === drink ? 'selected' : '' %>><%= drink %></option>
+            <% }); %>
+        </select>
+        <input type="text" name="drinkOther" id="drinkOther" placeholder="Specify other drink" style="display: none;">
+        
+        <label for="drinkQuantity">Drink quantity:</label>
+        <input type="number" name="drinkQuantity" id="drinkQuantity" min="0" value="<%= order.drink.quantity %>">
+        
+        <label for="snackChoice">Choose a snack:</label>
+        <select name="snackChoice" id="snackChoice" onchange="toggleOtherInput('snack')">
+            <% snacks.forEach(snack => { %>
+                <option value="<%= snack %>" <%= order.snack.name === snack ? 'selected' : '' %>><%= snack %></option>
+            <% }); %>
+        </select>
+        <input type="text" name="snackOther" id="snackOther" placeholder="Specify other snack" style="display: none;">
+        
+        <label for="snackQuantity">Snack quantity:</label>
+        <input type="number" name="snackQuantity" id="snackQuantity" min="0" value="<%= order.snack.quantity %>">
+        
+        <button type="submit">Submit Order</button>
+    </form>
 
-app.post('/reset', async (req, res) => {
-    try {
-        await client.del('order');
-        res.redirect('/');
-    } catch (error) {
-        console.error('Error resetting order:', error);
-        res.status(500).send('Error resetting order');
-    }
-});
+    <div id="results">
+        <h2>Your Order:</h2>
+        <% if (order.drink.name || order.snack.name) { %>
+            <div class="result-item">
+                <p>Drink: <%= order.drink.name %> (Quantity: <%= order.drink.quantity %>)</p>
+                <form action="/decrement/drink" method="POST" style="display: inline;">
+                    <button type="submit" class="decrement-btn">-</button>
+                </form>
+            </div>
+            <div class="result-item">
+                <p>Snack: <%= order.snack.name %> (Quantity: <%= order.snack.quantity %>)</p>
+                <form action="/decrement/snack" method="POST" style="display: inline;">
+                    <button type="submit" class="decrement-btn">-</button>
+                </form>
+            </div>
+            <form action="/reset" method="POST">
+                <button type="submit" class="reset-btn">Reset Order</button>
+            </form>
+        <% } else { %>
+            <p>No items ordered yet.</p>
+        <% } %>
+    </div>
 
-async function getOrderFromCache() {
-    const cachedOrder = await client.get('order');
-    return cachedOrder ? JSON.parse(cachedOrder) : { drink: { name: '', quantity: 0 }, snack: { name: '', quantity: 0 } };
-}
+    <script>
+        function toggleOtherInput(type) {
+            const select = document.getElementById(`${type}Choice`);
+            const otherInput = document.getElementById(`${type}Other`);
+            otherInput.style.display = select.value === 'Other' ? 'block' : 'none';
+        }
 
-async function saveOrderToCache(order) {
-    await client.set('order', JSON.stringify(order));
-}
-
-app.listen(port, () => {
-    console.log(`App listening at http://localhost:${port}`);
-});
+        // Initialize the visibility of "Other" inputs
+        toggleOtherInput('drink');
+        toggleOtherInput('snack');
+    </script>
+</body>
+</html>
