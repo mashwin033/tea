@@ -23,6 +23,7 @@ const snacks = ['Select', 'Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch', 'Other'];
 app.get('/', async (req, res) => {
     try {
         const orders = await getOrdersFromCache();
+        console.log('Orders retrieved from Redis:', orders); 
         res.render('home', { orders, drinks, snacks });
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -50,6 +51,8 @@ app.post('/submit', async (req, res) => {
             orders.snacks[snackName] = (orders.snacks[snackName] || 0) + parseInt(snackQuantity || 0);
         }
 
+        console.log('Orders before saving to Redis:', orders);  // Add this log
+
         await saveOrdersToCache(orders);
         res.redirect('/');
     } catch (error) {
@@ -57,6 +60,7 @@ app.post('/submit', async (req, res) => {
         res.status(500).send('Error saving order');
     }
 });
+
 
 
 app.post('/update/:type/:item', async (req, res) => {
