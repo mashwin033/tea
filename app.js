@@ -34,7 +34,11 @@ app.post('/submit', async (req, res) => {
     const { drinkChoice, drinkOther, drinkQuantity, snackChoice, snackOther, snackQuantity } = req.body;
 
     try {
-        const orders = await getOrdersFromCache();
+        let orders = await getOrdersFromCache();
+
+        // Initialize drinks and snacks objects if not present
+        if (!orders.drinks) orders.drinks = {};
+        if (!orders.snacks) orders.snacks = {};
 
         if (drinkChoice !== 'Select') {
             const drinkName = drinkChoice === 'Other' ? drinkOther : drinkChoice;
@@ -53,6 +57,7 @@ app.post('/submit', async (req, res) => {
         res.status(500).send('Error saving order');
     }
 });
+
 
 app.post('/update/:type/:item', async (req, res) => {
     const { type, item } = req.params;
@@ -89,7 +94,13 @@ app.post('/reset', async (req, res) => {
 
 async function getOrdersFromCache() {
     const cachedOrders = await client.get('orders');
-    return cachedOrders ? JSON.parse(cachedOrders) : { drinks: {}, snacks: {} };
+    const orders = cachedOrders ? JSON.parse(cachedOrders) : { drinks: {}, snacks: {} };
+    
+    // Ensure orders object has drinks and snacks initialized
+    if (!orders.drinks) orders.drinks = {};
+    if (!orders.snacks) orders.snacks = {};
+    
+    return orders;
 }
 
 async function saveOrdersToCache(orders) {
