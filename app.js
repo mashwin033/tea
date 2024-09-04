@@ -13,6 +13,14 @@ const client = redis.createClient({ url: redisUrl });
 
 (async () => {
     await client.connect();
+    await client.flushAll();  // This command clears all data in Redis
+    console.log('Redis database cleared.');
+    await client.quit();
+})();
+
+
+(async () => {
+    await client.connect();
 })();
 
 client.on('error', (err) => console.log('Redis Client Error', err));
