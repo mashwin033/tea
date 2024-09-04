@@ -33,19 +33,21 @@ app.get('/', async (req, res) => {
 app.post('/submit', async (req, res) => {
     const { drinkChoice, drinkOther, drinkQuantity, snackChoice, snackOther, snackQuantity } = req.body;
 
-    const order = {
-        drink: {
-            name: drinkChoice === 'Other' ? drinkOther : drinkChoice,
-            quantity: parseInt(drinkQuantity) || 0
-        },
-        snack: {
-            name: snackChoice === 'Other' ? snackOther : snackChoice,
-            quantity: parseInt(snackQuantity) || 0
-        }
-    };
-
     try {
-        await saveOrderToCache(order);
+        const currentOrder = await getOrderFromCache();
+
+        const newOrder = {
+            drink: {
+                name: drinkChoice === 'Other' ? drinkOther : drinkChoice,
+                quantity: currentOrder.drink.quantity + (parseInt(drinkQuantity) || 0)
+            },
+            snack: {
+                name: snackChoice === 'Other' ? snackOther : snackChoice,
+                quantity: currentOrder.snack.quantity + (parseInt(snackQuantity) || 0)
+            }
+        };
+
+        await saveOrderToCache(newOrder);
         res.redirect('/');
     } catch (error) {
         console.error('Error saving order:', error);
