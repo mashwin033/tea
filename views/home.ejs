@@ -70,22 +70,31 @@
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .result-item span {
+            flex: 1;
+        }
         .quantity-control {
             display: flex;
             align-items: center;
+            gap: 8px;
         }
         .quantity-control button {
-            background-color: #b0bec5;
-            color: #fff;
+            background-color: #e0e0e0;
+            color: #333;
             width: 30px;
             height: 30px;
             border: none;
-            border-radius: 50%;
+            border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
         .quantity-control button:hover {
-            background-color: #90a4ae;
+            background-color: #c0c0c0;
+        }
+        .quantity-control span {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 500;
         }
         .reset-btn {
             background-color: #03dac5;
