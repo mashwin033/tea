@@ -6,7 +6,7 @@
     <title>Drink and Snack Order</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap">
     <style>
-        /* Existing styles */
+ /* Existing styles */
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #f4f4f9;
@@ -51,10 +51,10 @@ button {
     padding: 12px;
     border: none;
     border-radius: 4px;
-    align-item:center;
     cursor: pointer;
     transition: background-color 0.3s ease;
     font-size: 16px;
+    width: 100%;
 }
 
 button:hover {
@@ -68,9 +68,6 @@ button:hover {
 .result-section {
     background: #fff;
     padding: 20px;
-    display: flex;
-    align-items:center;
-    justify-content:space-evenly;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     max-width: 600px;
@@ -91,16 +88,19 @@ button:hover {
     background: #fafafa;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-wrap: nowrap; /* Ensures the items stay in a single line */
 }
 
 .result-item span {
     flex: 1;
+    margin-right: 10px;
+    word-break: break-word;
 }
 
 .quantity-control {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
 }
 
 .quantity-control button {
@@ -127,11 +127,11 @@ button:hover {
 
 .reset-btn {
     background-color: #03dac5;
-    align-item:center;
+    margin-top: 20px;
 }
 
 .reset-btn:hover {
-    background-color: #3700b3;
+    background-color: #018786;
 }
 
 /* Responsive Styles */
@@ -141,18 +141,18 @@ button:hover {
     }
 
     .result-item {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-wrap: nowrap; /* Keeps items in a single row */
+        align-items: center; /* Aligns the content in the center */
     }
 
     .quantity-control {
-        flex-direction: row; /* Ensure buttons stay on the same row as the item name */
         gap: 4px;
     }
 
     .quantity-control button {
-        width: 40px; /* Increased width for better touch targets */
-        height: 40px; /* Increased height for better touch targets */
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
     }
 }
 
@@ -166,7 +166,20 @@ button:hover {
         padding: 8px;
         font-size: 14px;
     }
+
+    .result-item {
+        padding: 8px;
+        margin-bottom: 8px;
+        flex-wrap: nowrap; /* Ensures it stays horizontal even on small screens */
+    }
+
+    .quantity-control button {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
 }
+
     </style>
 </head>
 <body>
