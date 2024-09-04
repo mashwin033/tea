@@ -17,16 +17,16 @@ const client = redis.createClient({ url: redisUrl });
 
 client.on('error', (err) => console.log('Redis Client Error', err));
 
-const drinks = ['Tea', 'Coffee', 'Black Tea', 'Black Coffee', 'Lime Tea', 'Boost', 'Horlicks', 'Other'];
-const snacks = ['Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch', 'Other'];
+const drinks = ['Select', 'Tea', 'Coffee', 'Black Tea', 'Black Coffee', 'Lime Tea', 'Boost', 'Horlicks', 'Other'];
+const snacks = ['Select', 'Cutlet', 'Puffs', 'Ela Ada', 'Bread Pouch', 'Other'];
 
 app.get('/', async (req, res) => {
     try {
-        const order = await getOrderFromCache();
-        res.render('home', { order, drinks, snacks });
+        const orders = await getOrdersFromCache();
+        res.render('home', { orders, drinks, snacks });
     } catch (error) {
-        console.error('Error fetching order:', error);
-        res.status(500).send('Error fetching order');
+        console.error('Error fetching orders:', error);
+        res.status(500).send('Error fetching orders');
     }
 });
 
@@ -34,20 +34,29 @@ app.post('/submit', async (req, res) => {
     const { drinkChoice, drinkOther, drinkQuantity, snackChoice, snackOther, snackQuantity } = req.body;
 
     try {
-        const currentOrder = await getOrderFromCache();
+        const orders = await getOrdersFromCache();
 
-        const newOrder = {
-            drink: {
+        const newOrder = {};
+
+        if (drinkChoice !== 'Select') {
+            newOrder.drink = {
                 name: drinkChoice === 'Other' ? drinkOther : drinkChoice,
-                quantity: currentOrder.drink.quantity + (parseInt(drinkQuantity) || 0)
-            },
-            snack: {
-                name: snackChoice === 'Other' ? snackOther : snackChoice,
-                quantity: currentOrder.snack.quantity + (parseInt(snackQuantity) || 0)
-            }
-        };
+                quantity: parseInt(drinkQuantity) || 0
+            };
+        }
 
-        await saveOrderToCache(newOrder);
+        if (snackChoice !== 'Select') {
+            newOrder.snack = {
+                name: snackChoice === 'Other' ? snackOther : snackChoice,
+                quantity: parseInt(snackQuantity) || 0
+            };
+        }
+
+        if (Object.keys(newOrder).length > 0) {
+            orders.push(newOrder);
+            await saveOrdersToCache(orders);
+        }
+
         res.redirect('/');
     } catch (error) {
         console.error('Error saving order:', error);
@@ -55,13 +64,19 @@ app.post('/submit', async (req, res) => {
     }
 });
 
-app.post('/decrement/:item', async (req, res) => {
-    const item = req.params.item;
+app.post('/decrement/:index/:item', async (req, res) => {
+    const { index, item } = req.params;
     try {
-        const order = await getOrderFromCache();
-        if (order[item].quantity > 0) {
-            order[item].quantity--;
-            await saveOrderToCache(order);
+        const orders = await getOrdersFromCache();
+        if (orders[index] && orders[index][item] && orders[index][item].quantity > 0) {
+            orders[index][item].quantity--;
+            if (orders[index][item].quantity === 0) {
+                delete orders[index][item];
+            }
+            if (Object.keys(orders[index]).length === 0) {
+                orders.splice(index, 1);
+            }
+            await saveOrdersToCache(orders);
         }
         res.redirect('/');
     } catch (error) {
@@ -72,21 +87,21 @@ app.post('/decrement/:item', async (req, res) => {
 
 app.post('/reset', async (req, res) => {
     try {
-        await client.del('order');
+        await client.del('orders');
         res.redirect('/');
     } catch (error) {
-        console.error('Error resetting order:', error);
-        res.status(500).send('Error resetting order');
+        console.error('Error resetting orders:', error);
+        res.status(500).send('Error resetting orders');
     }
 });
 
-async function getOrderFromCache() {
-    const cachedOrder = await client.get('order');
-    return cachedOrder ? JSON.parse(cachedOrder) : { drink: { name: '', quantity: 0 }, snack: { name: '', quantity: 0 } };
+async function getOrdersFromCache() {
+    const cachedOrders = await client.get('orders');
+    return cachedOrders ? JSON.parse(cachedOrders) : [];
 }
 
-async function saveOrderToCache(order) {
-    await client.set('order', JSON.stringify(order));
+async function saveOrdersToCache(orders) {
+    await client.set('orders', JSON.stringify(orders));
 }
 
 app.listen(port, () => {
